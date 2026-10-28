@@ -116,6 +116,7 @@ CREATE TABLE clubs (
     FOREIGN KEY (fest_id) REFERENCES fests (id)
     ON DELETE RESTRICT,
   CONSTRAINT chk_clubs_active CHECK (is_active IN (0, 1))
+    CONSTRAINT uq_clubs_id_fest UNIQUE (id, fest_id),
 ) ENGINE=InnoDB;
 
 CREATE TABLE positions (
