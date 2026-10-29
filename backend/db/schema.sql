@@ -325,6 +325,7 @@ CREATE TABLE registrations (
   id                INT UNSIGNED  NOT NULL AUTO_INCREMENT,
   event_id          INT UNSIGNED  NOT NULL,
   user_id           INT UNSIGNED  NOT NULL,
+    team_id           INT UNSIGNED  NULL,
   status            ENUM('pending', 'approved', 'confirmed', 'rejected', 'cancelled') NOT NULL,
   rejection_reason  VARCHAR(500)  NULL,
   decided_by        INT UNSIGNED  NULL,
@@ -465,3 +466,103 @@ CREATE TABLE notifications (
   CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users (id),
   CONSTRAINT chk_notifications_read CHECK (is_read IN (0, 1))
 ) ENGINE=InnoDB;
+
+
+-- ---------------------------------------------------------
+-- GROUP 7: TIER 2 — DELEGATES, ANNOUNCEMENTS, TEAMS, GALLERY
+-- ---------------------------------------------------------
+
+CREATE TABLE delegations (
+  id          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  event_id    INT UNSIGNED  NOT NULL,
+  user_id     INT UNSIGNED  NOT NULL,
+  granted_by  INT UNSIGNED  NOT NULL,
+  created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  revoked_at  DATETIME      NULL,
+  revoked_by  INT UNSIGNED  NULL,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_delegations_event_user UNIQUE (event_id, user_id),
+  INDEX idx_delegations_user (user_id),
+  CONSTRAINT fk_delegations_event      FOREIGN KEY (event_id)   REFERENCES events (id) ON DELETE CASCADE,
+  CONSTRAINT fk_delegations_user       FOREIGN KEY (user_id)    REFERENCES users (id),
+  CONSTRAINT fk_delegations_granted_by FOREIGN KEY (granted_by) REFERENCES users (id),
+  CONSTRAINT fk_delegations_revoked_by FOREIGN KEY (revoked_by) REFERENCES users (id),
+  CONSTRAINT chk_delegations_revoked CHECK (
+       (revoked_at IS NULL     AND revoked_by IS NULL)
+    OR (revoked_at IS NOT NULL AND revoked_by IS NOT NULL)
+  )
+) ENGINE=InnoDB;
+
+CREATE TABLE delegation_permissions (
+  delegation_id  INT UNSIGNED  NOT NULL,
+  permission     VARCHAR(50)   NOT NULL,
+  PRIMARY KEY (delegation_id, permission),
+  CONSTRAINT fk_dp_delegation
+    FOREIGN KEY (delegation_id) REFERENCES delegations (id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE announcements (
+  id          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  event_id    INT UNSIGNED  NOT NULL,
+  posted_by   INT UNSIGNED  NOT NULL,
+  title       VARCHAR(150)  NOT NULL,
+  body        TEXT          NOT NULL,
+  created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT fk_announcements_event  FOREIGN KEY (event_id)  REFERENCES events (id) ON DELETE CASCADE,
+  CONSTRAINT fk_announcements_poster FOREIGN KEY (posted_by) REFERENCES users (id)
+) ENGINE=InnoDB;
+
+CREATE TABLE teams (
+  id          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  event_id    INT UNSIGNED  NOT NULL,
+  name        VARCHAR(60)   NOT NULL,
+  leader_id   INT UNSIGNED  NOT NULL,
+  status      ENUM('forming', 'submitted', 'cancelled') NOT NULL DEFAULT 'forming',
+  created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_teams_id_event   UNIQUE (id, event_id),
+  CONSTRAINT uq_teams_event_name UNIQUE (event_id, name),
+  CONSTRAINT fk_teams_event  FOREIGN KEY (event_id)  REFERENCES events (id),
+  CONSTRAINT fk_teams_leader FOREIGN KEY (leader_id) REFERENCES users (id)
+) ENGINE=InnoDB;
+
+CREATE TABLE team_members (
+  team_id            INT UNSIGNED  NOT NULL,
+  event_id           INT UNSIGNED  NOT NULL,
+  user_id            INT UNSIGNED  NOT NULL,
+  invite_status      ENUM('invited', 'accepted', 'declined') NOT NULL DEFAULT 'invited',
+  invited_at         DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  responded_at       DATETIME      NULL,
+  accepted_event_id  INT UNSIGNED
+      GENERATED ALWAYS AS (CASE WHEN invite_status = 'accepted' THEN event_id END) STORED,
+  PRIMARY KEY (team_id, user_id),
+  CONSTRAINT uq_team_members_one_team UNIQUE (user_id, accepted_event_id),
+  CONSTRAINT fk_team_members_team FOREIGN KEY (team_id, event_id) REFERENCES teams (id, event_id),
+  CONSTRAINT fk_team_members_user FOREIGN KEY (user_id) REFERENCES users (id),
+  CONSTRAINT chk_team_members_response CHECK (
+       (invite_status = 'invited'  AND responded_at IS NULL)
+    OR (invite_status <> 'invited' AND responded_at IS NOT NULL)
+  )
+) ENGINE=InnoDB;
+
+CREATE TABLE gallery_photos (
+  id           INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  event_id     INT UNSIGNED  NOT NULL,
+  stored_name  VARCHAR(255)  NOT NULL,
+  caption      VARCHAR(200)  NULL,
+  mime_type    VARCHAR(100)  NOT NULL,
+  size_bytes   INT UNSIGNED  NOT NULL,
+  uploaded_by  INT UNSIGNED  NOT NULL,
+  created_at   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_gallery_stored_name UNIQUE (stored_name),
+  CONSTRAINT fk_gallery_event    FOREIGN KEY (event_id)    REFERENCES events (id) ON DELETE CASCADE,
+  CONSTRAINT fk_gallery_uploader FOREIGN KEY (uploaded_by) REFERENCES users (id),
+  CONSTRAINT chk_gallery_size CHECK (size_bytes > 0)
+) ENGINE=InnoDB;
+
+-- registrations ↔ teams link (added here because teams is created after registrations)
+ALTER TABLE registrations
+  ADD CONSTRAINT fk_registrations_team
+  FOREIGN KEY (team_id, event_id) REFERENCES teams (id, event_id);

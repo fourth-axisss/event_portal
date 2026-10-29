@@ -275,3 +275,39 @@ INSERT INTO notifications (user_id, message, link, is_read) VALUES
   (8,  'New registration request from Ishita Kapoor for Music Club Recruitment.',  '/organize/events/4/registrations', 0),
   (4,  'Your certificates for Coding Club Quiz are ready.',                        '/certificates',                    0),
   (7,  'Payment failed for Robowars. Please try again.',                           '/events/3',                        0);
+
+
+
+-- ---------------------------------------------------------
+-- GROUP 7: TIER 2
+-- ---------------------------------------------------------
+
+-- Dr. Mehta makes Kabir a delegate on the Git workshop; Ishita's FDP delegation was revoked
+INSERT INTO delegations (id, event_id, user_id, granted_by, revoked_at, revoked_by) VALUES
+  (1, 7, 6,  2, NULL,                  NULL),
+  (2, 6, 10, 2, '2026-10-28 12:00:00', 2);
+
+INSERT INTO delegation_permissions (delegation_id, permission) VALUES
+  (1, 'registrations'),
+  (1, 'attendance'),
+  (2, 'announcements_files');
+
+INSERT INTO announcements (id, event_id, posted_by, title, body) VALUES
+  (1, 7, 2, 'Bring your laptop', 'Please bring a laptop with Git installed. Lab PCs are limited.');
+
+-- Two hackathon teams forming; Ishita is invited to both
+INSERT INTO teams (id, event_id, name, leader_id) VALUES
+  (1, 2, 'Null Pointers', 4),    -- leader Riya
+  (2, 2, 'Byte Me',       12);   -- leader Rahul
+
+INSERT INTO team_members (team_id, event_id, user_id, invite_status, responded_at) VALUES
+  (1, 2, 4,  'accepted', '2026-10-28 20:00:00'),   -- Riya (leader)
+  (1, 2, 13, 'accepted', '2026-10-28 21:00:00'),   -- Neha
+  (1, 2, 10, 'invited',  NULL),                    -- Ishita (no answer yet)
+  (2, 2, 12, 'accepted', '2026-10-28 19:00:00'),   -- Rahul (leader)
+  (2, 2, 11, 'accepted', '2026-10-28 19:30:00'),   -- Priya
+  (2, 2, 10, 'invited',  NULL);                    -- Ishita again
+
+INSERT INTO gallery_photos (id, event_id, stored_name, caption, mime_type, size_bytes, uploaded_by) VALUES
+  (1, 8, 'quiz-hall-a1b2c3.jpg',    'Quiz in progress',              'image/jpeg', 512000, 9),
+  (2, 8, 'quiz-winners-d4e5f6.jpg', 'Winners with the coordinators', 'image/jpeg', 640000, 9);
