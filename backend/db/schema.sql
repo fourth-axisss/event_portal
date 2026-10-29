@@ -115,8 +115,8 @@ CREATE TABLE clubs (
   CONSTRAINT fk_clubs_fest
     FOREIGN KEY (fest_id) REFERENCES fests (id)
     ON DELETE RESTRICT,
-  CONSTRAINT chk_clubs_active CHECK (is_active IN (0, 1))
-    CONSTRAINT uq_clubs_id_fest UNIQUE (id, fest_id),
+  CONSTRAINT chk_clubs_active CHECK (is_active IN (0, 1)),
+    CONSTRAINT uq_clubs_id_fest UNIQUE (id, fest_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE positions (
@@ -125,11 +125,14 @@ CREATE TABLE positions (
   position_type  ENUM('fest_head', 'gsec', 'fest_event_creator', 'club_coordinator') NOT NULL,
   fest_id        INT UNSIGNED  NULL,
   club_id        INT UNSIGNED  NULL,
-  scope_id       INT UNSIGNED  GENERATED ALWAYS AS (COALESCE(club_id, fest_id)) STORED,
+    scope_id       INT UNSIGNED  GENERATED ALWAYS AS (COALESCE(club_id, fest_id)) STORED,
+  single_holder_fest_id INT UNSIGNED
+      GENERATED ALWAYS AS (CASE WHEN position_type IN ('fest_head', 'gsec') THEN fest_id END) STORED,
   granted_by     INT UNSIGNED  NOT NULL,
   created_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   CONSTRAINT uq_positions_user_scope UNIQUE (user_id, position_type, scope_id),
+  CONSTRAINT uq_positions_one_holder UNIQUE (position_type, single_holder_fest_id),
   CONSTRAINT fk_positions_user
     FOREIGN KEY (user_id) REFERENCES users (id)
     ON DELETE CASCADE,
