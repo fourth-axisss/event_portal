@@ -149,3 +149,165 @@ CREATE TABLE positions (
           AND club_id IS NOT NULL AND fest_id IS NULL)
   )
 ) ENGINE=InnoDB;
+
+
+
+
+
+
+-- ---------------------------------------------------------
+-- GROUP 4: EVENTS
+-- ---------------------------------------------------------
+
+CREATE TABLE events (
+  id                     INT UNSIGNED      NOT NULL AUTO_INCREMENT,
+  kind                   ENUM('normal', 'umbrella') NOT NULL DEFAULT 'normal',
+  scope                  ENUM('single_club', 'multi_club', 'fest', 'faculty') NOT NULL,
+  event_type_id          INT UNSIGNED      NULL,
+  fest_id                INT UNSIGNED      NULL,
+  club_id                INT UNSIGNED      NULL,
+  parent_event_id        INT UNSIGNED      NULL,
+  created_by             INT UNSIGNED      NOT NULL,
+  title                  VARCHAR(150)      NOT NULL,
+  description            TEXT              NULL,
+  venue_id               INT UNSIGNED      NULL,
+  start_time             DATETIME          NOT NULL,
+  end_time               DATETIME          NOT NULL,
+  registration_required  TINYINT(1)        NOT NULL DEFAULT 1,
+  registration_deadline  DATETIME          NULL,
+  capacity               INT UNSIGNED      NULL,
+  fee                    DECIMAL(8, 2)     NOT NULL DEFAULT 0.00,
+  auto_approve           TINYINT(1)        NOT NULL DEFAULT 1,
+  is_team_event          TINYINT(1)        NOT NULL DEFAULT 0,
+  team_min               TINYINT UNSIGNED  NULL,
+  team_max               TINYINT UNSIGNED  NULL,
+  open_to_externals      TINYINT(1)        NOT NULL DEFAULT 0,
+  certificate_criteria   ENUM('none', 'attendance', 'completion') NOT NULL DEFAULT 'attendance',
+  poster_path            VARCHAR(255)      NULL,
+  status                 ENUM('draft', 'published', 'cancelled') NOT NULL DEFAULT 'draft',
+  cancel_reason          VARCHAR(500)      NULL,
+  created_at             DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at             DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                           ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_events_id_fest UNIQUE (id, fest_id),
+  INDEX idx_events_status_start (status, start_time),
+
+  -- simple foreign keys (no ON DELETE written = NO ACTION = behaves as RESTRICT)
+  CONSTRAINT fk_events_type       FOREIGN KEY (event_type_id) REFERENCES event_types (id),
+  CONSTRAINT fk_events_fest       FOREIGN KEY (fest_id)       REFERENCES fests (id),
+  CONSTRAINT fk_events_venue      FOREIGN KEY (venue_id)      REFERENCES venues (id),
+  CONSTRAINT fk_events_created_by FOREIGN KEY (created_by)    REFERENCES users (id),
+
+  -- composite foreign keys (cross-table rules)
+  CONSTRAINT fk_events_club_fest
+    FOREIGN KEY (club_id, fest_id) REFERENCES clubs (id, fest_id),
+  CONSTRAINT fk_events_parent_same_fest
+    FOREIGN KEY (parent_event_id, fest_id) REFERENCES events (id, fest_id),
+
+  -- row rules
+  CONSTRAINT chk_events_scope CHECK (
+       (scope = 'faculty'     AND fest_id IS NULL     AND club_id IS NULL)
+    OR (scope = 'single_club' AND fest_id IS NOT NULL AND club_id IS NOT NULL)
+    OR (scope IN ('multi_club', 'fest') AND fest_id IS NOT NULL AND club_id IS NULL)
+  ),
+  CONSTRAINT chk_events_type_required CHECK (kind = 'umbrella' OR event_type_id IS NOT NULL),
+  CONSTRAINT chk_events_umbrella CHECK (
+       kind = 'normal'
+    OR (scope = 'fest' AND parent_event_id IS NULL
+        AND event_type_id IS NULL AND registration_required = 0)
+  ),
+  CONSTRAINT chk_events_parent CHECK (
+       parent_event_id IS NULL OR (kind = 'normal' AND scope <> 'faculty')
+  ),
+  CONSTRAINT chk_events_registration CHECK (
+       (registration_required = 1 AND registration_deadline IS NOT NULL
+                                  AND registration_deadline <= end_time)
+    OR (registration_required = 0 AND registration_deadline IS NULL
+        AND capacity IS NULL AND fee = 0 AND is_team_event = 0
+        AND certificate_criteria = 'none' AND open_to_externals = 0)
+  ),
+  CONSTRAINT chk_events_time      CHECK (end_time > start_time),
+  CONSTRAINT chk_events_capacity  CHECK (capacity IS NULL OR capacity > 0),
+  CONSTRAINT chk_events_fee       CHECK (fee >= 0),
+  CONSTRAINT chk_events_team CHECK (
+       (is_team_event = 0 AND team_min IS NULL AND team_max IS NULL)
+    OR (is_team_event = 1 AND team_min IS NOT NULL AND team_max IS NOT NULL
+        AND team_min >= 1 AND team_max >= team_min)
+  ),
+  CONSTRAINT chk_events_externals CHECK (open_to_externals = 0 OR scope = 'fest'),
+  CONSTRAINT chk_events_bools CHECK (
+        registration_required IN (0, 1) AND auto_approve IN (0, 1)
+    AND is_team_event IN (0, 1)         AND open_to_externals IN (0, 1)
+  )
+) ENGINE=InnoDB;
+
+CREATE TABLE event_clubs (
+  event_id  INT UNSIGNED NOT NULL,
+  fest_id   INT UNSIGNED NOT NULL,
+  club_id   INT UNSIGNED NOT NULL,
+  PRIMARY KEY (event_id, club_id),
+  CONSTRAINT fk_event_clubs_event
+    FOREIGN KEY (event_id, fest_id) REFERENCES events (id, fest_id) ON DELETE CASCADE,
+  CONSTRAINT fk_event_clubs_club
+    FOREIGN KEY (club_id, fest_id)  REFERENCES clubs (id, fest_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE event_eligibility (
+  event_id  INT UNSIGNED NOT NULL,
+  program   ENUM('UG', 'DD', 'PG', 'PHD') NOT NULL,
+  year      TINYINT UNSIGNED NOT NULL,
+  PRIMARY KEY (event_id, program, year),
+  CONSTRAINT fk_event_eligibility_event
+    FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
+  CONSTRAINT chk_event_eligibility_year CHECK (
+       (program = 'UG'  AND year BETWEEN 1 AND 4)
+    OR (program = 'DD'  AND year BETWEEN 1 AND 5)
+    OR (program = 'PG'  AND year BETWEEN 1 AND 2)
+    OR (program = 'PHD' AND year BETWEEN 1 AND 5)
+  )
+) ENGINE=InnoDB;
+
+CREATE TABLE event_eligible_departments (
+  event_id       INT UNSIGNED NOT NULL,
+  department_id  INT UNSIGNED NOT NULL,
+  PRIMARY KEY (event_id, department_id),
+  CONSTRAINT fk_eed_event
+    FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
+  CONSTRAINT fk_eed_department
+    FOREIGN KEY (department_id) REFERENCES departments (id)
+) ENGINE=InnoDB;
+
+CREATE TABLE event_files (
+  id             INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  event_id       INT UNSIGNED  NOT NULL,
+  title          VARCHAR(150)  NOT NULL,
+  stored_name    VARCHAR(255)  NOT NULL,
+  original_name  VARCHAR(255)  NOT NULL,
+  mime_type      VARCHAR(100)  NOT NULL,
+  size_bytes     INT UNSIGNED  NOT NULL,
+  uploaded_by    INT UNSIGNED  NOT NULL,
+  created_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_event_files_stored_name UNIQUE (stored_name),
+  CONSTRAINT fk_event_files_event
+    FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
+  CONSTRAINT fk_event_files_uploader
+    FOREIGN KEY (uploaded_by) REFERENCES users (id),
+  CONSTRAINT chk_event_files_size CHECK (size_bytes > 0)
+) ENGINE=InnoDB;
+
+-- Lifecycle computed at read time (never stored, never stale)
+CREATE VIEW v_events AS
+SELECT e.*,
+  CASE
+    WHEN e.status = 'draft'                THEN 'draft'
+    WHEN e.status = 'cancelled'            THEN 'cancelled'
+    WHEN NOW() >= e.end_time               THEN 'completed'
+    WHEN NOW() >= e.start_time             THEN 'ongoing'
+    WHEN e.registration_required = 1
+         AND NOW() > e.registration_deadline THEN 'registration_closed'
+    WHEN e.registration_required = 1       THEN 'registration_open'
+    ELSE 'upcoming'
+  END AS lifecycle
+FROM events e;

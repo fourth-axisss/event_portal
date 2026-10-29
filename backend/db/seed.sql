@@ -104,3 +104,95 @@ INSERT INTO positions (id, user_id, position_type, fest_id, club_id, granted_by)
   (5, 8,  'club_coordinator',   NULL, 1,    1),   -- Aman: Music Club Coordinator (by admin)
   (6, 9,  'club_coordinator',   NULL, 8,    1),   -- Vikram: Coding Club Coordinator (by admin)
   (7, 9,  'fest_event_creator', 3,    NULL, 6);   -- Vikram: also FEC, Plinth (granted by Kabir)
+
+
+
+
+
+
+  -- ---------------------------------------------------------
+-- GROUP 4: EVENTS
+-- ---------------------------------------------------------
+
+-- 1. Quantz: Plinth's umbrella (by Arjun, Fest Head of Plinth)
+INSERT INTO events (id, kind, scope, fest_id, created_by, title, description, venue_id,
+                    start_time, end_time, registration_required, certificate_criteria, status)
+VALUES (1, 'umbrella', 'fest', 3, 5, 'Quantz', 'Flagship 3-day tech carnival of Plinth', 7,
+        '2026-11-14 09:00:00', '2026-11-16 22:00:00', 0, 'none', 'published');
+
+-- 2. Plinth Hackathon: fest event inside Quantz (by Ishita, Fest Event Creator), team of 2-4, open to externals
+INSERT INTO events (id, scope, event_type_id, fest_id, parent_event_id, created_by, title, venue_id,
+                    start_time, end_time, registration_deadline, capacity,
+                    is_team_event, team_min, team_max, open_to_externals, status)
+VALUES (2, 'fest', 8, 3, 1, 10, 'Plinth Hackathon 2026', 16,
+        '2026-11-14 10:00:00', '2026-11-15 10:00:00', '2026-11-12 23:59:59', 100,
+        1, 2, 4, 1, 'published');
+
+-- 3. Robowars: Robotics Club event inside Quantz (by Arjun), paid, team of 2-5
+INSERT INTO events (id, scope, event_type_id, fest_id, club_id, parent_event_id, created_by, title, venue_id,
+                    start_time, end_time, registration_deadline, capacity, fee,
+                    is_team_event, team_min, team_max, status)
+VALUES (3, 'single_club', 7, 3, 9, 1, 5, 'Robowars', 8,
+        '2026-11-15 14:00:00', '2026-11-15 18:00:00', '2026-11-13 23:59:59', 40, 200.00,
+        1, 2, 5, 'published');
+
+-- 4. Music Club Recruitment: single-club, NEEDS APPROVAL (by Aman, Music Club Coordinator)
+INSERT INTO events (id, scope, event_type_id, fest_id, club_id, created_by, title, venue_id,
+                    start_time, end_time, registration_deadline, capacity, auto_approve, status)
+VALUES (4, 'single_club', 12, 1, 1, 8, 'Music Club Recruitment', 18,
+        '2026-11-05 17:00:00', '2026-11-05 20:00:00', '2026-11-03 23:59:59', 30, 0, 'published');
+
+-- 5. Gusto: multi-club Vivacity event, no registration needed (by Sneha, Fest Head of Vivacity)
+INSERT INTO events (id, scope, event_type_id, fest_id, created_by, title, venue_id,
+                    start_time, end_time, registration_required, certificate_criteria, status)
+VALUES (5, 'multi_club', 10, 1, 7, 'Gusto', 7,
+        '2026-11-20 18:00:00', '2026-11-20 22:00:00', 0, 'none', 'published');
+
+-- 6. FDP on Machine Learning: faculty event (by Dr. Mehta)
+INSERT INTO events (id, scope, event_type_id, created_by, title, venue_id,
+                    start_time, end_time, registration_deadline, capacity, status)
+VALUES (6, 'faculty', 1, 2, 'FDP on Machine Learning', 5,
+        '2026-11-10 09:30:00', '2026-11-10 17:30:00', '2026-11-08 23:59:59', 40, 'published');
+
+-- 7. Git & GitHub Workshop: faculty event with eligibility (by Dr. Mehta). Overlaps Music Recruitment!
+INSERT INTO events (id, scope, event_type_id, created_by, title, venue_id,
+                    start_time, end_time, registration_deadline, capacity, status)
+VALUES (7, 'faculty', 2, 2, 'Git & GitHub Workshop', 6,
+        '2026-11-05 16:00:00', '2026-11-05 19:00:00', '2026-11-04 23:59:59', 60, 'published');
+
+-- 8. Coding Club Quiz: already finished (by Vikram, Coding Club Coordinator)
+INSERT INTO events (id, scope, event_type_id, fest_id, club_id, created_by, title, venue_id,
+                    start_time, end_time, registration_deadline, capacity, status)
+VALUES (8, 'single_club', 9, 3, 8, 9, 'Coding Club Quiz', 2,
+        '2026-10-20 18:00:00', '2026-10-20 19:30:00', '2026-10-19 23:59:59', 100, 'published');
+
+-- 9. Python for Data Science: self-paced, running now, online (no venue) (by Dr. Kavita Sharma)
+INSERT INTO events (id, scope, event_type_id, created_by, title,
+                    start_time, end_time, registration_deadline, certificate_criteria, status)
+VALUES (9, 'faculty', 5, 3, 'Python for Data Science',
+        '2026-10-01 00:00:00', '2026-12-31 23:59:59', '2026-12-15 23:59:59', 'completion', 'published');
+
+-- 10. Drone Wars: still a DRAFT inside Quantz (by Ishita)
+INSERT INTO events (id, scope, event_type_id, fest_id, parent_event_id, created_by, title, venue_id,
+                    start_time, end_time, registration_deadline, capacity, fee,
+                    is_team_event, team_min, team_max, status)
+VALUES (10, 'fest', 7, 3, 1, 10, 'Drone Wars', 8,
+        '2026-11-16 10:00:00', '2026-11-16 13:00:00', '2026-11-13 23:59:59', 30, 100.00,
+        1, 1, 3, 'draft');
+
+-- Gusto's participating clubs (both Vivacity clubs)
+INSERT INTO event_clubs (event_id, fest_id, club_id) VALUES
+  (5, 1, 1),   -- Music Club
+  (5, 1, 2);   -- Dance Club
+
+-- Eligibility grid
+INSERT INTO event_eligibility (event_id, program, year) VALUES
+  (4, 'UG', 1), (4, 'UG', 2),                                -- Music Recruitment: UG 1st & 2nd year
+  (7, 'UG', 2), (7, 'UG', 3), (7, 'PG', 1), (7, 'PG', 2);    -- Workshop: UG 2-3 + all PG
+
+INSERT INTO event_eligible_departments (event_id, department_id) VALUES
+  (7, 1), (7, 2);                                            -- Workshop: CSE and CCE only
+
+-- One file record (the actual PDF doesn't exist on disk yet; that comes with uploads)
+INSERT INTO event_files (id, event_id, title, stored_name, original_name, mime_type, size_bytes, uploaded_by)
+VALUES (1, 6, 'FDP Brochure', 'fdp-ml-brochure-3f9a2c.pdf', 'FDP_ML_Brochure.pdf', 'application/pdf', 248000, 2);
