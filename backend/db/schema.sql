@@ -183,6 +183,7 @@ CREATE TABLE events (
   team_max               TINYINT UNSIGNED  NULL,
   open_to_externals      TINYINT(1)        NOT NULL DEFAULT 0,
   certificate_criteria   ENUM('none', 'attendance', 'completion') NOT NULL DEFAULT 'attendance',
+    min_attendance_percent TINYINT UNSIGNED  NOT NULL DEFAULT 75,
   poster_path            VARCHAR(255)      NULL,
   status                 ENUM('draft', 'published', 'cancelled') NOT NULL DEFAULT 'draft',
   cancel_reason          VARCHAR(500)      NULL,
@@ -206,6 +207,7 @@ CREATE TABLE events (
     FOREIGN KEY (parent_event_id, fest_id) REFERENCES events (id, fest_id),
 
   -- row rules
+    CONSTRAINT chk_events_min_attendance CHECK (min_attendance_percent BETWEEN 1 AND 100),
   CONSTRAINT chk_events_scope CHECK (
        (scope = 'faculty'     AND fest_id IS NULL     AND club_id IS NULL)
     OR (scope = 'single_club' AND fest_id IS NOT NULL AND club_id IS NOT NULL)
@@ -311,3 +313,72 @@ SELECT e.*,
     ELSE 'upcoming'
   END AS lifecycle
 FROM events e;
+
+
+
+
+-- ---------------------------------------------------------
+-- GROUP 5: REGISTRATIONS & PAYMENTS
+-- ---------------------------------------------------------
+
+CREATE TABLE registrations (
+  id                INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  event_id          INT UNSIGNED  NOT NULL,
+  user_id           INT UNSIGNED  NOT NULL,
+  status            ENUM('pending', 'approved', 'confirmed', 'rejected', 'cancelled') NOT NULL,
+  rejection_reason  VARCHAR(500)  NULL,
+  decided_by        INT UNSIGNED  NULL,
+  decided_at        DATETIME      NULL,
+    completed             TINYINT(1)    NOT NULL DEFAULT 0,
+  completion_marked_by  INT UNSIGNED  NULL,
+  completion_marked_at  DATETIME      NULL,
+  registered_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                  ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_registrations_event_user UNIQUE (event_id, user_id),
+    CONSTRAINT uq_registrations_id_event UNIQUE (id, event_id),
+  INDEX idx_registrations_user_status (user_id, status),
+  CONSTRAINT fk_registrations_event      FOREIGN KEY (event_id)   REFERENCES events (id),
+  CONSTRAINT fk_registrations_user       FOREIGN KEY (user_id)    REFERENCES users (id),
+  CONSTRAINT fk_registrations_decided_by FOREIGN KEY (decided_by) REFERENCES users (id),
+  CONSTRAINT chk_registrations_rejection CHECK (
+       (status = 'rejected'  AND rejection_reason IS NOT NULL AND decided_by IS NOT NULL)
+    OR (status <> 'rejected' AND rejection_reason IS NULL)
+  ),
+  CONSTRAINT chk_registrations_decision CHECK (
+       (decided_by IS NULL     AND decided_at IS NULL)
+    OR (decided_by IS NOT NULL AND decided_at IS NOT NULL)
+  ),
+    CONSTRAINT fk_registrations_completion_by FOREIGN KEY (completion_marked_by) REFERENCES users (id),
+  CONSTRAINT chk_registrations_completion CHECK (
+       (completed = 0 AND completion_marked_by IS NULL AND completion_marked_at IS NULL)
+    OR (completed = 1 AND completion_marked_by IS NOT NULL AND completion_marked_at IS NOT NULL
+        AND status = 'confirmed')
+  )
+) ENGINE=InnoDB;
+
+CREATE TABLE payments (
+  id                    INT UNSIGNED   NOT NULL AUTO_INCREMENT,
+  registration_id       INT UNSIGNED   NOT NULL,
+  organizer_id          INT UNSIGNED   NOT NULL,
+  amount                DECIMAL(8, 2)  NOT NULL,
+  status                ENUM('created', 'paid', 'failed', 'refunded') NOT NULL DEFAULT 'created',
+  provider              ENUM('simulated', 'razorpay') NOT NULL DEFAULT 'simulated',
+  provider_order_id     VARCHAR(100)   NOT NULL,
+  provider_payment_id   VARCHAR(100)   NULL,
+  paid_registration_id  INT UNSIGNED
+      GENERATED ALWAYS AS (CASE WHEN status = 'paid' THEN registration_id END) STORED,
+  created_at            DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  paid_at               DATETIME       NULL,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_payments_order    UNIQUE (provider_order_id),
+  CONSTRAINT uq_payments_one_paid UNIQUE (paid_registration_id),
+  CONSTRAINT fk_payments_registration FOREIGN KEY (registration_id) REFERENCES registrations (id),
+  CONSTRAINT fk_payments_organizer    FOREIGN KEY (organizer_id)    REFERENCES users (id),
+  CONSTRAINT chk_payments_amount CHECK (amount > 0),
+  CONSTRAINT chk_payments_status CHECK (
+       (status IN ('paid', 'refunded') AND paid_at IS NOT NULL AND provider_payment_id IS NOT NULL)
+    OR (status IN ('created', 'failed') AND paid_at IS NULL)
+  )
+) ENGINE=InnoDB;
