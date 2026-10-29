@@ -196,3 +196,82 @@ INSERT INTO event_eligible_departments (event_id, department_id) VALUES
 -- One file record (the actual PDF doesn't exist on disk yet; that comes with uploads)
 INSERT INTO event_files (id, event_id, title, stored_name, original_name, mime_type, size_bytes, uploaded_by)
 VALUES (1, 6, 'FDP Brochure', 'fdp-ml-brochure-3f9a2c.pdf', 'FDP_ML_Brochure.pdf', 'application/pdf', 248000, 2);
+
+
+
+-- ---------------------------------------------------------
+-- GROUP 5: REGISTRATIONS & PAYMENTS
+-- ---------------------------------------------------------
+
+INSERT INTO registrations (id, event_id, user_id, status, decided_by, decided_at) VALUES
+  (1,  7, 4,  'confirmed', NULL, NULL),                    -- Riya:  Git workshop (auto-approved)
+  (2,  7, 7,  'confirmed', NULL, NULL),                    -- Sneha: Git workshop
+  (3,  4, 13, 'confirmed', 8, '2026-10-28 18:00:00'),      -- Neha:  Music Recruitment, approved by Aman
+  (4,  4, 10, 'pending',   NULL, NULL),                    -- Ishita: Music Recruitment, waiting for Aman
+  (5,  3, 4,  'confirmed', NULL, NULL),                    -- Riya:  Robowars, paid
+  (6,  3, 7,  'approved',  NULL, NULL),                    -- Sneha: Robowars, payment pending
+  (7,  9, 4,  'confirmed', NULL, NULL),                    -- Riya:  Python course
+  (8,  9, 12, 'confirmed', NULL, NULL),                    -- Rahul: Python course
+  (9,  8, 4,  'confirmed', NULL, NULL),                    -- Riya:  Coding Club Quiz (past)
+  (10, 8, 10, 'confirmed', NULL, NULL),                    -- Ishita: Coding Club Quiz (past)
+  (11, 8, 7,  'cancelled', NULL, NULL),                    -- Sneha: cancelled the quiz
+  (12, 6, 3,  'confirmed', NULL, NULL);                    -- Dr. Kavita: FDP (faculty participant)
+
+INSERT INTO payments (id, registration_id, organizer_id, amount, status,
+                      provider_order_id, provider_payment_id, paid_at) VALUES
+  (1, 5, 5, 200.00, 'paid',   'sim_order_0001', 'sim_pay_0001', '2026-10-27 20:15:00'),  -- Riya paid
+  (2, 6, 5, 200.00, 'failed', 'sim_order_0002', NULL,           NULL);                   -- Sneha's attempt failed
+
+
+  -- ---------------------------------------------------------
+-- GROUP 6: SESSIONS, ATTENDANCE & AFTER THE EVENT
+-- ---------------------------------------------------------
+
+-- A finished 3-day event to demonstrate multi-day attendance (by Dr. Kavita Sharma)
+INSERT INTO events (id, scope, event_type_id, created_by, title, venue_id,
+                    start_time, end_time, registration_deadline, capacity, status)
+VALUES (11, 'faculty', 4, 3, 'Short-Term Training on Cloud Computing', 10,
+        '2026-10-12 09:30:00', '2026-10-14 16:30:00', '2026-10-10 23:59:59', 50, 'published');
+
+INSERT INTO registrations (id, event_id, user_id, status) VALUES
+  (13, 11, 4,  'confirmed'),   -- Riya
+  (14, 11, 6,  'confirmed'),   -- Kabir
+  (15, 11, 13, 'confirmed');   -- Neha
+
+-- Sessions (the server auto-creates these; the seed writes them explicitly)
+INSERT INTO event_sessions (id, event_id, title, start_time, end_time) VALUES
+  (1,  8,  'Quiz',      '2026-10-20 18:00:00', '2026-10-20 19:30:00'),
+  (2,  11, 'Day 1',     '2026-10-12 09:30:00', '2026-10-12 16:30:00'),
+  (3,  11, 'Day 2',     '2026-10-13 09:30:00', '2026-10-13 16:30:00'),
+  (4,  11, 'Day 3',     '2026-10-14 09:30:00', '2026-10-14 16:30:00'),
+  (5,  2,  'Hackathon', '2026-11-14 10:00:00', '2026-11-15 10:00:00'),
+  (6,  3,  'Robowars',  '2026-11-15 14:00:00', '2026-11-15 18:00:00'),
+  (7,  4,  'Auditions', '2026-11-05 17:00:00', '2026-11-05 20:00:00'),
+  (8,  6,  'FDP',       '2026-11-10 09:30:00', '2026-11-10 17:30:00'),
+  (9,  7,  'Workshop',  '2026-11-05 16:00:00', '2026-11-05 19:00:00'),
+  (10, 10, 'Drone Wars','2026-11-16 10:00:00', '2026-11-16 13:00:00');
+
+-- Attendance: a row = present
+INSERT INTO session_attendance (session_id, event_id, registration_id, method, marked_by, marked_at) VALUES
+  (1, 8,  9,  'manual', 9, '2026-10-20 19:45:00'),   -- Quiz: Riya present (Ishita absent → no row)
+  (2, 11, 13, 'manual', 3, '2026-10-12 10:00:00'),   -- Day 1: Riya
+  (2, 11, 14, 'manual', 3, '2026-10-12 10:00:00'),   -- Day 1: Kabir
+  (2, 11, 15, 'manual', 3, '2026-10-12 10:00:00'),   -- Day 1: Neha
+  (3, 11, 13, 'manual', 3, '2026-10-13 10:00:00'),   -- Day 2: Riya
+  (3, 11, 14, 'manual', 3, '2026-10-13 10:00:00'),   -- Day 2: Kabir
+  (4, 11, 13, 'qr',     4, '2026-10-14 09:41:00');   -- Day 3: Riya, self check-in by QR
+-- Totals: Riya 3/3, Kabir 2/3, Neha 1/3
+
+INSERT INTO certificates (id, certificate_code, event_id, user_id, type, rank_label, issued_by) VALUES
+  (1, 'CERT-7K3P9QX2', 8, 4, 'participation', NULL,     9),
+  (2, 'CERT-M4ZT8W1N', 8, 4, 'merit',         'Winner', 9),
+  (3, 'CERT-R2HV6C9D', 8, 9, 'organizer',     NULL,     5);
+
+INSERT INTO feedback (event_id, user_id, rating, comment) VALUES
+  (8, 4, 5, 'Great questions, well organised!');
+
+INSERT INTO notifications (user_id, message, link, is_read) VALUES
+  (13, 'Your registration for Music Club Recruitment was approved.',               '/events/4',                        1),
+  (8,  'New registration request from Ishita Kapoor for Music Club Recruitment.',  '/organize/events/4/registrations', 0),
+  (4,  'Your certificates for Coding Club Quiz are ready.',                        '/certificates',                    0),
+  (7,  'Payment failed for Robowars. Please try again.',                           '/events/3',                        0);

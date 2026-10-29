@@ -382,3 +382,86 @@ CREATE TABLE payments (
     OR (status IN ('created', 'failed') AND paid_at IS NULL)
   )
 ) ENGINE=InnoDB;
+
+
+
+-- ---------------------------------------------------------
+-- GROUP 6: SESSIONS, ATTENDANCE & AFTER THE EVENT
+-- ---------------------------------------------------------
+
+CREATE TABLE event_sessions (
+  id          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  event_id    INT UNSIGNED  NOT NULL,
+  title       VARCHAR(100)  NOT NULL,
+  start_time  DATETIME      NOT NULL,
+  end_time    DATETIME      NOT NULL,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_event_sessions_id_event UNIQUE (id, event_id),
+  CONSTRAINT uq_event_sessions_start    UNIQUE (event_id, start_time),
+  CONSTRAINT fk_event_sessions_event
+    FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
+  CONSTRAINT chk_event_sessions_time CHECK (end_time > start_time)
+) ENGINE=InnoDB;
+
+CREATE TABLE session_attendance (
+  session_id       INT UNSIGNED  NOT NULL,
+  event_id         INT UNSIGNED  NOT NULL,
+  registration_id  INT UNSIGNED  NOT NULL,
+  method           ENUM('manual', 'qr') NOT NULL DEFAULT 'manual',
+  marked_by        INT UNSIGNED  NOT NULL,
+  marked_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (session_id, registration_id),
+  CONSTRAINT fk_sa_session
+    FOREIGN KEY (session_id, event_id) REFERENCES event_sessions (id, event_id) ON DELETE CASCADE,
+  CONSTRAINT fk_sa_registration
+    FOREIGN KEY (registration_id, event_id) REFERENCES registrations (id, event_id),
+  CONSTRAINT fk_sa_marked_by
+    FOREIGN KEY (marked_by) REFERENCES users (id)
+) ENGINE=InnoDB;
+
+CREATE TABLE certificates (
+  id                INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  certificate_code  VARCHAR(20)   NOT NULL,
+  event_id          INT UNSIGNED  NOT NULL,
+  user_id           INT UNSIGNED  NOT NULL,
+  type              ENUM('participation', 'merit', 'organizer') NOT NULL,
+  rank_label        VARCHAR(50)   NULL,
+  issued_by         INT UNSIGNED  NOT NULL,
+  issued_at         DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_certificates_code            UNIQUE (certificate_code),
+  CONSTRAINT uq_certificates_event_user_type UNIQUE (event_id, user_id, type),
+  INDEX idx_certificates_user (user_id),
+  CONSTRAINT fk_certificates_event     FOREIGN KEY (event_id)  REFERENCES events (id),
+  CONSTRAINT fk_certificates_user      FOREIGN KEY (user_id)   REFERENCES users (id),
+  CONSTRAINT fk_certificates_issued_by FOREIGN KEY (issued_by) REFERENCES users (id),
+  CONSTRAINT chk_certificates_rank CHECK (
+       (type = 'merit'  AND rank_label IS NOT NULL)
+    OR (type <> 'merit' AND rank_label IS NULL)
+  )
+) ENGINE=InnoDB;
+
+CREATE TABLE feedback (
+  event_id    INT UNSIGNED      NOT NULL,
+  user_id     INT UNSIGNED      NOT NULL,
+  rating      TINYINT UNSIGNED  NOT NULL,
+  comment     VARCHAR(1000)     NULL,
+  created_at  DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (event_id, user_id),
+  CONSTRAINT fk_feedback_event FOREIGN KEY (event_id) REFERENCES events (id),
+  CONSTRAINT fk_feedback_user  FOREIGN KEY (user_id)  REFERENCES users (id),
+  CONSTRAINT chk_feedback_rating CHECK (rating BETWEEN 1 AND 5)
+) ENGINE=InnoDB;
+
+CREATE TABLE notifications (
+  id          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  user_id     INT UNSIGNED  NOT NULL,
+  message     VARCHAR(300)  NOT NULL,
+  link        VARCHAR(255)  NULL,
+  is_read     TINYINT(1)    NOT NULL DEFAULT 0,
+  created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  INDEX idx_notifications_user_read (user_id, is_read, created_at),
+  CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users (id),
+  CONSTRAINT chk_notifications_read CHECK (is_read IN (0, 1))
+) ENGINE=InnoDB;
