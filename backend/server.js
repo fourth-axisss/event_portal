@@ -18,8 +18,7 @@ app.get('/api/health', async (req, res) => {
   res.json({ ok: true, db_time: rows[0].db_time });
 });
 
-// Routers are added here in later groups, e.g.:
-// app.use('/api', require('./routes/authRoutes'));
+app.use('/api', require('./routes/authRoutes'));
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
