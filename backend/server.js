@@ -20,6 +20,7 @@ app.get('/api/health', async (req, res) => {
 
 app.use('/api', require('./routes/authRoutes'));
 
+
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });

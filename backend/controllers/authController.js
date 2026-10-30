@@ -1,3 +1,4 @@
+const { getCapabilities } = require('../services/permissionService');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('../db/pool');
@@ -29,4 +30,19 @@ async function login(req, res) {
   });
 }
 
-module.exports = { login };
+async function getMe(req, res) {
+  const [rows] = await pool.query(
+    `SELECT u.id, u.name, u.email, u.role, u.roll_no, u.program, u.year, u.phone,
+            u.department_id, d.code AS department_code, d.name AS department_name
+       FROM users u
+       LEFT JOIN departments d ON d.id = u.department_id
+      WHERE u.id = ?`,
+    [req.user.id]
+  );
+
+  const capabilities = await getCapabilities(req.user);
+
+  res.json({ user: rows[0], capabilities });
+}
+
+module.exports = { login, getMe };
