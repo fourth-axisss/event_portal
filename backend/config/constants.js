@@ -32,7 +32,8 @@ const DELEGABLE_PERMISSIONS = ['registrations', 'attendance', 'announcements_fil
 
 const DELEGATION_EXPIRY_DAYS = 15;
 const DEFAULT_MIN_ATTENDANCE_PERCENT = 75;
-
+const ORGANIZE_RULES = ['faculty', 'student', 'both'];
+const PARTICIPATE_RULES = ['student', 'faculty', 'both'];
 module.exports = {
   ROLES,
   POSITION_TYPES,
@@ -46,4 +47,6 @@ module.exports = {
   DELEGABLE_PERMISSIONS,
   DELEGATION_EXPIRY_DAYS,
   DEFAULT_MIN_ATTENDANCE_PERCENT,
+  ORGANIZE_RULES,
+  PARTICIPATE_RULES
 };

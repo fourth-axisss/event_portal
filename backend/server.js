@@ -19,6 +19,7 @@ app.get('/api/health', async (req, res) => {
 });
 
 app.use('/api', require('./routes/authRoutes'));
+app.use('/api', require('./routes/masterRoutes'));
 
 
 app.use((req, res) => {
