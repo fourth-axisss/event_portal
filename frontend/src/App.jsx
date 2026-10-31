@@ -3,6 +3,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/layout/AppLayout';
 import Login from './pages/auth/Login';
 import Dashboard from './pages/participant/Dashboard';
+import AdminLayout from './pages/admin/AdminLayout';
+import DepartmentsVenues from './pages/admin/DepartmentsVenues';
+import EventTypes from './pages/admin/EventTypes';
+import { ROLES } from './utils/constants';
 
 export default function App() {
   return (
@@ -12,6 +16,14 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
+
+          <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Navigate to="departments" replace />} />
+              <Route path="departments" element={<DepartmentsVenues />} />
+              <Route path="event-types" element={<EventTypes />} />
+            </Route>
+          </Route>
         </Route>
       </Route>
 
