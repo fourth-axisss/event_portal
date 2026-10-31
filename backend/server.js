@@ -11,7 +11,12 @@ const app = express();
 
 app.use(cors({ origin: process.env.CLIENT_ORIGIN }));
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads', 'public')));
+   app.use(
+     '/uploads',
+     express.static(path.join(__dirname, 'uploads', 'public'), {
+       setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
+     })
+   );
 
 app.get('/api/health', async (req, res) => {
   const [rows] = await pool.query('SELECT NOW() AS db_time');
@@ -25,6 +30,8 @@ app.use('/api', require('./routes/masterRoutes'));
 app.use('/api', require('./routes/adminRoutes'));
 
 app.use('/api', require('./routes/eventRoutes'));
+
+   app.use('/api', require('./routes/fileRoutes'));
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
