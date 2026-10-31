@@ -4,6 +4,8 @@ import AppLayout from './components/layout/AppLayout';
 import Login from './pages/auth/Login';
 import Dashboard from './pages/participant/Dashboard';
 import AdminLayout from './pages/admin/AdminLayout';
+import Users from './pages/admin/Users';
+import FestsClubs from './pages/admin/FestsClubs';
 import DepartmentsVenues from './pages/admin/DepartmentsVenues';
 import EventTypes from './pages/admin/EventTypes';
 import { ROLES } from './utils/constants';
@@ -19,7 +21,9 @@ export default function App() {
 
           <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
             <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Navigate to="departments" replace />} />
+              <Route index element={<Navigate to="users" replace />} />
+              <Route path="users" element={<Users />} />
+              <Route path="fests" element={<FestsClubs />} />
               <Route path="departments" element={<DepartmentsVenues />} />
               <Route path="event-types" element={<EventTypes />} />
             </Route>
