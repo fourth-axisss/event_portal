@@ -1,0 +1,192 @@
+/* Colours sampled from lnmiit.ac.in */
+:root {
+  --brand: #7e0914;
+  --brand-dark: #5f0710;
+  --accent: #d25301;
+  --ink: #212727;
+  --muted: #6c7272;
+  --page: #f7f6f3;
+  --line: #e5e1db;
+
+  --bs-body-bg: var(--page);
+  --bs-body-color: var(--ink);
+  --bs-body-font-family: 'Source Sans 3', system-ui, 'Segoe UI', sans-serif;
+  --bs-primary: #7e0914;
+  --bs-primary-rgb: 126, 9, 20;
+  --bs-link-color: #7e0914;
+  --bs-link-color-rgb: 126, 9, 20;
+  --bs-link-hover-color: #5f0710;
+  --bs-link-hover-color-rgb: 95, 7, 16;
+  --bs-border-color: var(--line);
+}
+
+h1, h2, h3, .font-serif {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Buttons and inputs in the brand colour */
+.btn-primary {
+  --bs-btn-bg: var(--brand);
+  --bs-btn-border-color: var(--brand);
+  --bs-btn-hover-bg: var(--brand-dark);
+  --bs-btn-hover-border-color: var(--brand-dark);
+  --bs-btn-active-bg: var(--brand-dark);
+  --bs-btn-active-border-color: var(--brand-dark);
+  --bs-btn-disabled-bg: var(--brand);
+  --bs-btn-disabled-border-color: var(--brand);
+  --bs-btn-focus-shadow-rgb: 126, 9, 20;
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--brand);
+  --bs-btn-border-color: var(--brand);
+  --bs-btn-hover-bg: var(--brand);
+  --bs-btn-hover-border-color: var(--brand);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-active-bg: var(--brand-dark);
+  --bs-btn-active-border-color: var(--brand-dark);
+}
+.form-control:focus,
+.form-select:focus {
+  border-color: #b46a71;
+  box-shadow: 0 0 0 0.2rem rgba(126, 9, 20, 0.15);
+}
+
+/* Navbar */
+.app-navbar {
+  background: var(--brand);
+  border-bottom: 3px solid var(--accent);
+}
+.app-navbar .nav-link {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+}
+.app-navbar .nav-link:hover,
+.app-navbar .nav-link.active {
+  color: #fff;
+}
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.brand-square {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  background: var(--accent);
+}
+.brand-sub {
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+/* Page title with the dark rule underneath */
+.page-header {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.page-header h1 {
+  font-size: 1.75rem;
+  margin: 0;
+}
+.page-header p {
+  color: var(--muted);
+  margin: 0.35rem 0 0;
+}
+
+/* Cards, small labels, square tags */
+.card {
+  --bs-card-border-color: var(--line);
+  --bs-card-border-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgba(33, 39, 39, 0.04);
+}
+.section-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+.tag {
+  display: inline-block;
+  background: var(--brand);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+}
+.info-list {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 0.45rem 1rem;
+  margin: 0;
+}
+.info-list dt {
+  font-weight: 400;
+  color: var(--muted);
+}
+.info-list dd {
+  margin: 0;
+}
+
+/* Login page */
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+}
+.login-panel {
+  background: var(--brand);
+  color: #fff;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.login-panel h1 {
+  font-size: 2.25rem;
+  line-height: 1.3;
+  margin: 2.5rem 0 1rem;
+}
+.login-panel p {
+  opacity: 0.85;
+  max-width: 26rem;
+}
+.login-fests {
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.login-form-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+.login-form {
+  width: 100%;
+  max-width: 22rem;
+}
+@media (max-width: 767.98px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+  .login-panel {
+    padding: 1.5rem;
+  }
+  .login-panel h1 {
+    font-size: 1.5rem;
+    margin: 1rem 0 0;
+  }
+  .login-panel p,
+  .login-fests {
+    display: none;
+  }
+}
