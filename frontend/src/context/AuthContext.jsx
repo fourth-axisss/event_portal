@@ -24,6 +24,17 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
+
+
+    // Another tab logged in or out: reload so this tab shows the same person
+  useEffect(() => {
+    function handleStorage(e) {
+      if (e.key === 'token') window.location.reload();
+    }
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   async function login(email, password) {
     const res = await api.post('/auth/login', { email, password });
     localStorage.setItem('token', res.data.token);
