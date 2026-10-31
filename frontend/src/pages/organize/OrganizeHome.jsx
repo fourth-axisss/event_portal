@@ -48,7 +48,7 @@ export default function OrganizeHome() {
               {events?.map((e) => (
                 <tr key={e.id}>
                   <td>
-                    <div className="fw-semibold">{e.title}</div>
+                                        <Link to={`/organize/events/${e.id}`} className="fw-semibold">{e.title}</Link>
                     <div className="small text-muted">
                       {e.kind === 'umbrella' ? 'Umbrella event' : `${e.type_name} · ${SCOPE_LABELS[e.scope]}`}
                       {e.club_name ? ` · ${e.club_name}` : e.fest_name ? ` · ${e.fest_name}` : ''}
@@ -63,8 +63,8 @@ export default function OrganizeHome() {
                     <span className="small text-muted">{e.confirmed_count} confirmed</span>
                   </td>
                   <td className="text-end">
-                    <Button as={Link} to={`/organize/events/${e.id}/edit`} size="sm" variant="link">
-                      Edit
+                                        <Button as={Link} to={`/organize/events/${e.id}`} size="sm" variant="link">
+                      Manage
                     </Button>
                   </td>
                 </tr>

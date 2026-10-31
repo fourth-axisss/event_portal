@@ -173,7 +173,7 @@ export default function EventForm() {
     return body;
   }
 
-  async function handleSubmit(e) {
+ /* async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     setSaving(true);
@@ -184,6 +184,32 @@ export default function EventForm() {
       } else {
         await api.post('/events', buildBody());
         navigate('/organize', { state: { message: `"${form.title}" saved as a draft. Publish it when you are ready.` } });
+      }
+    } catch (err) {
+      setError(getErrorMessage(err));
+      setSaving(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  */
+
+
+
+    async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+    setSaving(true);
+    try {
+      if (isEdit) {
+        const res = await api.patch(`/events/${id}`, buildBody());
+        const message = res.data.note ? `Changes saved. ${res.data.note}` : 'Changes saved.';
+        navigate(`/organize/events/${id}`, { state: { message } });
+      } else {
+        const res = await api.post('/events', buildBody());
+        navigate(`/organize/events/${res.data.id}`, {
+          state: { message: `"${form.title}" saved as a draft. Check the details, then publish it.` },
+        });
       }
     } catch (err) {
       setError(getErrorMessage(err));
@@ -422,7 +448,9 @@ export default function EventForm() {
 
           <div className="d-flex gap-2 mt-4">
             <Button type="submit">{saving ? 'Saving…' : isEdit ? 'Save changes' : 'Save as draft'}</Button>
-            <Button as={Link} to="/organize" variant="outline-secondary">Cancel</Button>
+                        <Button as={Link} to={isEdit ? `/organize/events/${id}` : '/organize'} variant="outline-secondary">
+              Cancel
+            </Button>
           </div>
         </fieldset>
       </Form>
