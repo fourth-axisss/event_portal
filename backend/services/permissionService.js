@@ -1,5 +1,5 @@
 const pool = require('../db/pool');
-const { ROLES, DELEGATION_EXPIRY_DAYS } = require('../config/constants');
+const { ROLES, POSITION_TYPES, DELEGATION_EXPIRY_DAYS } = require('../config/constants');
 
 async function getCapabilities(user) {
   const [positions] = await pool.query(
@@ -39,4 +39,16 @@ async function getCapabilities(user) {
   return { positions, delegations, can_organize: canOrganize };
 }
 
-module.exports = { getCapabilities };
+
+// Admin, or the Fest Head / GSec of this fest
+async function isFestLeader(user, festId) {
+  if (user.role === ROLES.ADMIN) return true;
+  const [rows] = await pool.query(
+    `SELECT 1 FROM positions
+      WHERE user_id = ? AND fest_id = ? AND position_type IN (?)
+      LIMIT 1`,
+    [user.id, festId, [POSITION_TYPES.FEST_HEAD, POSITION_TYPES.GSEC]]
+  );
+  return rows.length > 0;
+}
+module.exports = { getCapabilities, isFestLeader };

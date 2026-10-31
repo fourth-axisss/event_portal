@@ -6,6 +6,12 @@ const { ROLES } = require('../config/constants');
 const v = require('../validators/masterValidators');
 const c = require('../controllers/masterController');
 
+
+
+const requireFestLeader = require('../middleware/requireFestLeader');
+const av = require('../validators/adminValidators');
+const p = require('../controllers/positionController');
+
 const router = express.Router();
 const adminOnly = [authenticate, authorize(ROLES.ADMIN)];
 
@@ -29,5 +35,12 @@ router.post('/clubs', adminOnly, validate(v.clubCreate), c.clubs.create);
 router.patch('/clubs/:id', adminOnly, validate(v.clubUpdate), c.clubs.update);
 
 router.get('/users/lookup', authenticate, validate(v.lookupRules), c.lookupUser);
+
+
+router.get('/fests/:festId/event-creators', authenticate, requireFestLeader, p.listEventCreators);
+router.post('/fests/:festId/event-creators', authenticate, requireFestLeader,
+  validate(av.eventCreatorAddRules), p.addEventCreator);
+router.delete('/fests/:festId/event-creators/:userId', authenticate, requireFestLeader,
+  validate(av.eventCreatorRemoveRules), p.removeEventCreator);
 
 module.exports = router;

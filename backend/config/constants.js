@@ -34,6 +34,11 @@ const DELEGATION_EXPIRY_DAYS = 15;
 const DEFAULT_MIN_ATTENDANCE_PERCENT = 75;
 const ORGANIZE_RULES = ['faculty', 'student', 'both'];
 const PARTICIPATE_RULES = ['student', 'faculty', 'both'];
+
+
+const PROGRAMS = ['UG', 'DD', 'PG', 'PHD'];
+const PROGRAM_MAX_YEAR = { UG: 4, DD: 5, PG: 2, PHD: 5 };
+const BCRYPT_ROUNDS = 10;
 module.exports = {
   ROLES,
   POSITION_TYPES,
@@ -48,5 +53,8 @@ module.exports = {
   DELEGATION_EXPIRY_DAYS,
   DEFAULT_MIN_ATTENDANCE_PERCENT,
   ORGANIZE_RULES,
-  PARTICIPATE_RULES
+  PARTICIPATE_RULES,
+  PROGRAMS,
+  PROGRAM_MAX_YEAR,
+  BCRYPT_ROUNDS
 };
