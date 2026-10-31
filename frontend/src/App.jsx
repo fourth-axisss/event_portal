@@ -3,6 +3,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/layout/AppLayout';
 import Login from './pages/auth/Login';
 import Dashboard from './pages/participant/Dashboard';
+import OrganizeHome from './pages/organize/OrganizeHome';
+import EventForm from './pages/organize/EventForm';
 import AdminLayout from './pages/admin/AdminLayout';
 import Users from './pages/admin/Users';
 import FestsClubs from './pages/admin/FestsClubs';
@@ -18,6 +20,10 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
+
+          <Route path="/organize" element={<OrganizeHome />} />
+          <Route path="/organize/new" element={<EventForm />} />
+          <Route path="/organize/events/:id/edit" element={<EventForm />} />
 
           <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
             <Route path="/admin" element={<AdminLayout />}>

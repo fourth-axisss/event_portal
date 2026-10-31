@@ -255,3 +255,36 @@ h1, h2, h3, .font-serif {
   border-left: 3px solid var(--accent);
   padding: 0.5rem 0.75rem;
 }
+
+
+
+/* Event form */
+.form-section + .form-section {
+  margin-top: 1.25rem;
+}
+.eligibility-grid th,
+.eligibility-grid td {
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.35rem 0.5rem;
+}
+.eligibility-grid th:first-child,
+.eligibility-grid td:first-child {
+  text-align: left;
+}
+
+/* Lifecycle badges */
+.status-badge {
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.3em 0.6em;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+}
+.status-draft { background: #ecebe8; color: #555; }
+.status-registration_open { background: #e3f1e6; color: #1e6b34; }
+.status-registration_closed { background: #fdf0d9; color: #8a5a00; }
+.status-upcoming { background: #e6eef6; color: #1f4f7a; }
+.status-ongoing { background: #f7e6e8; color: var(--brand); }
+.status-completed { background: #e9ecef; color: #3d4448; }
+.status-cancelled { background: #fbe4e4; color: #a12626; }
