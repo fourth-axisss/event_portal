@@ -24,6 +24,8 @@ app.use('/api', require('./routes/masterRoutes'));
 
 app.use('/api', require('./routes/adminRoutes'));
 
+app.use('/api', require('./routes/eventRoutes'));
+
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
