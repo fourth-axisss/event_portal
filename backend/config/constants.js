@@ -10,6 +10,15 @@ const POSITION_TYPES = {
 const EVENT_KINDS = { NORMAL: 'normal', UMBRELLA: 'umbrella' };
 const EVENT_SCOPES = { SINGLE_CLUB: 'single_club', MULTI_CLUB: 'multi_club', FEST: 'fest', FACULTY: 'faculty' };
 const EVENT_STATUS = { DRAFT: 'draft', PUBLISHED: 'published', CANCELLED: 'cancelled' };
+   const EVENT_LIFECYCLE = {
+     DRAFT: 'draft',
+     CANCELLED: 'cancelled',
+     COMPLETED: 'completed',
+     ONGOING: 'ongoing',
+     REGISTRATION_CLOSED: 'registration_closed',
+     REGISTRATION_OPEN: 'registration_open',
+     UPCOMING: 'upcoming',
+   };
 const CERTIFICATE_CRITERIA = ['none', 'attendance', 'completion'];
 
 const REGISTRATION_STATUS = {
@@ -49,6 +58,7 @@ module.exports = {
   EVENT_KINDS,
   EVENT_SCOPES,
   EVENT_STATUS,
+  EVENT_LIFECYCLE,
   CERTIFICATE_CRITERIA,
   REGISTRATION_STATUS,
   SEAT_TAKING_STATUSES,
