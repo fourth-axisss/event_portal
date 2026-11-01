@@ -33,6 +33,8 @@ app.use('/api', require('./routes/eventRoutes'));
 
    app.use('/api', require('./routes/fileRoutes'));
 
+app.use('/api', require('./routes/registrationRoutes'));
+
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
