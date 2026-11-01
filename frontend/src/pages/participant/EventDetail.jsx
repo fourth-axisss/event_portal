@@ -213,7 +213,10 @@ export default function EventDetail() {
 
 */
 
+import PayButton from '../../components/PayButton';
 
+
+//import PayButton from '../../components/PayButton';
 
 
 import { useState } from 'react';
@@ -343,7 +346,15 @@ function RegistrationPanel({ event, onChanged }) {
       {canRegister && !event.auto_approve && (
         <p className="small text-muted mt-2 mb-0">An organizer reviews each registration.</p>
       )}
-      {status === 'approved' && <p className="small text-muted mt-3 mb-0">Online payment opens in the next update.</p>}
+            {status === 'approved' && (
+        <PayButton
+          registrationId={my.registration.id}
+          amount={event.fee}
+          title={event.title}
+          onDone={onChanged}
+          className="w-100 mt-3"
+        />
+      )}
       {canCancel && (
         <Button variant="link" className="text-danger p-0 mt-3" onClick={() => setShowCancel(true)} disabled={busy}>
           Cancel my registration

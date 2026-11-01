@@ -77,3 +77,16 @@ export const REGISTRATION_LABELS = {
   rejected: 'Not approved',
   cancelled: 'Cancelled',
 };
+
+
+
+
+// '2026-11-01 17:30:00' → 'just now' / '5 min ago' / '3 h ago' / '2 days ago' / '20 Oct 2026'
+export function timeAgo(text) {
+  const seconds = Math.floor((Date.now() - toDate(text).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} h ago`;
+  if (seconds < 7 * 86400) return `${Math.floor(seconds / 86400)} day${seconds < 2 * 86400 ? '' : 's'} ago`;
+  return formatDate(text);
+}

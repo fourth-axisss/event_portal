@@ -9,6 +9,13 @@ import useLoad from '../../utils/useLoad';
 import { STATUS_TONES } from '../../utils/eventBadges';
 import { formatRange, REGISTRATION_LABELS } from '../../utils/format';
 
+
+
+//import PayButton from '../../components/PayButton';
+
+
+import PayButton from '../../components/PayButton';
+
 const NOT_STARTED = ['registration_open', 'registration_closed', 'upcoming'];
 const LIVE_STATUSES = ['pending', 'approved', 'confirmed'];
 
@@ -90,6 +97,15 @@ export default function MyRegistrations() {
             {r.status === 'rejected' && <p className="small text-danger mb-0">Reason: {r.rejection_reason}</p>}
             {r.event_status === 'cancelled' && r.cancel_reason && (
               <p className="small text-danger mb-0">Reason: {r.cancel_reason}</p>
+            )}
+
+
+//After this payment......its there
+
+                        {r.status === 'approved' && r.event_status !== 'cancelled' && (
+              <div className="mt-2">
+                <PayButton registrationId={r.id} amount={r.fee} title={r.title} onDone={reload} size="sm" />
+              </div>
             )}
 
             {canCancel && (

@@ -430,3 +430,67 @@ h1, h2, h3, .font-serif {
 .trail .current .dot {
   border-color: var(--brand);
 }
+
+
+
+
+
+/* Notification bell */
+.bell-toggle {
+  position: relative;
+  background: transparent;
+  border: 0;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0.4rem 0.6rem;
+}
+.bell-toggle:hover,
+.bell-toggle:focus {
+  color: #fff;
+}
+.bell-toggle::after {
+  display: none; /* hide Bootstrap's dropdown arrow */
+}
+.bell-count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.15rem;
+  text-align: center;
+}
+.bell-menu {
+  width: 22rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0;
+}
+.bell-list {
+  max-height: 24rem;
+  overflow-y: auto;
+}
+.bell-item {
+  display: flex;
+  gap: 0.6rem;
+  white-space: normal;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.bell-item .unread-dot {
+  flex: 0 0 0.5rem;
+  height: 0.5rem;
+  margin-top: 0.45rem;
+  border-radius: 50%;
+  background: transparent;
+}
+.bell-item.unread .unread-dot {
+  background: var(--brand);
+}
+.bell-item.unread .bell-text {
+  font-weight: 600;
+}
