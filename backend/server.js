@@ -38,6 +38,11 @@ app.use('/api', require('./routes/registrationRoutes'));
 app.use('/api', require('./routes/paymentRoutes'));
 app.use('/api', require('./routes/notificationRoutes'));
 
+
+app.use('/api', require('./routes/attendanceRoutes'));
+app.use('/api', require('./routes/certificateRoutes'));
+app.use('/api', require('./routes/feedbackRoutes'));
+
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
