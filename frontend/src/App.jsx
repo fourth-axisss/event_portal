@@ -3,6 +3,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/layout/AppLayout';
 import Login from './pages/auth/Login';
 import Dashboard from './pages/participant/Dashboard';
+import BrowseEvents from './pages/participant/BrowseEvents';
+import EventDetail from './pages/participant/EventDetail';
 import OrganizeHome from './pages/organize/OrganizeHome';
 import EventForm from './pages/organize/EventForm';
 import EventControl from './pages/organize/EventControl/EventControl';
@@ -21,6 +23,8 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/events" element={<BrowseEvents />} />
+          <Route path="/events/:id" element={<EventDetail />} />
 
           <Route path="/organize" element={<OrganizeHome />} />
           <Route path="/organize/new" element={<EventForm />} />

@@ -52,3 +52,28 @@ export const CRITERIA_LABELS = {
   completion: 'Marked complete by the organizer',
   none: 'No certificates',
 };
+
+
+
+// { cells, departments } → { grid: 'UG: years 1, 2 · PG: year 1', departments: 'CSE, ECE' }
+export function describeEligibility(eligibility) {
+  const byProgram = {};
+  for (const c of eligibility.cells) {
+    (byProgram[c.program] ||= []).push(c.year);
+  }
+  const programs = Object.entries(byProgram).map(
+    ([program, years]) => `${program}: year${years.length > 1 ? 's' : ''} ${years.join(', ')}`
+  );
+  return {
+    grid: programs.length > 0 ? programs.join(' · ') : 'All programs and years',
+    departments: eligibility.departments.length > 0 ? eligibility.departments.map((d) => d.code).join(', ') : 'All departments',
+  };
+}
+
+export const REGISTRATION_LABELS = {
+  pending: 'Awaiting approval',
+  approved: 'Approved: pay to confirm',
+  confirmed: 'Registered',
+  rejected: 'Not approved',
+  cancelled: 'Cancelled',
+};
