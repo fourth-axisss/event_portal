@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { notify } = require('../services/notificationService');
 const {
   ROLES,
   POSITION_TYPES,
@@ -362,7 +363,19 @@ async function cancelEvent(req, res) {
   }
 
   // Group 6: notify everyone registered (after commit)
-  res.json({ message: 'Event cancelled', children_cancelled: childrenCancelled });
+    // Tell everyone registered (on this event, or on events inside a cancelled umbrella)
+  const [affected] = await pool.query(
+    `SELECT r.user_id, e.id AS event_id, e.title
+       FROM registrations r
+       JOIN events e ON e.id = r.event_id
+      WHERE (e.id = ? OR e.parent_event_id = ?) AND r.status IN (?)`,
+    [event.id, event.id, ACTIVE_STATUSES]
+  );
+  for (const row of affected) {
+    await notify([row.user_id], `${row.title} was cancelled: ${reason}`, `/events/${row.event_id}`);
+  }
+
+  res.json({ message: 'Event cancelled', children_cancelled: childrenCancelled, notified: affected.length });
 }
 
 // DELETE /events/:id — drafts only

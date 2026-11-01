@@ -2,6 +2,7 @@ const pool = require('../db/pool');
 const HttpError = require('../utils/HttpError');
 const { register: registerUser, countSeats } = require('../services/registrationService');
 const { unique } = require('../services/eventService');
+const { notify } = require('../services/notificationService');
 const {
   EVENT_STATUS,
   EVENT_LIFECYCLE,
@@ -12,7 +13,6 @@ const {
 
 const LIVE_STATUSES = CLASH_STATUSES; // pending, approved, confirmed
 
-// Latest payment status of a registration ('paid' wins over older failed attempts)
 const PAYMENT_STATUS_SQL = `(SELECT p.status FROM payments p
                               WHERE p.registration_id = r.id
                               ORDER BY (p.status = 'paid') DESC, p.id DESC LIMIT 1)`;
@@ -21,10 +21,14 @@ function eventIsOver(event) {
   return event.status === EVENT_STATUS.CANCELLED || event.lifecycle === EVENT_LIFECYCLE.COMPLETED;
 }
 
-// Run an UPDATE on a list of registrations; roll back unless every one of them changed
 async function updateAllOrNothing(conn, sql, params, expected, message) {
   const [result] = await conn.query(sql, params);
   if (result.affectedRows !== expected) throw new HttpError(409, message);
+}
+
+async function userIdsOf(registrationIds) {
+  const [rows] = await pool.query('SELECT user_id FROM registrations WHERE id IN (?)', [registrationIds]);
+  return rows.map((r) => r.user_id);
 }
 
 // ---------- participant ----------
@@ -38,13 +42,16 @@ async function register(req, res) {
 
   const responses = {
     confirmed: { next: 'done', message: `You're registered for ${reg.title}.` },
-    approved: { next: 'pay', message: `You're approved. Pay ₹${reg.fee} to confirm your seat.` },
-    pending: { next: 'wait_for_approval', message: 'Request sent. The organizer will review it.' },
+    approved: { next: 'pay', message: `You're approved for ${reg.title}. Pay ₹${reg.fee} to confirm your seat.` },
+    pending: { next: 'wait_for_approval', message: `Your request for ${reg.title} was sent. The organizer will review it.` },
   };
-  res.status(201).json({ ...responses[reg.status], registration: { id: reg.id, status: reg.status } });
+  const reply = responses[reg.status];
+
+  await notify([req.user.id], reply.message, `/events/${eventId}`, { email: reg.status !== 'pending' });
+  res.status(201).json({ ...reply, registration: { id: reg.id, status: reg.status } });
 }
 
-// POST /registrations/:id/cancel — only your own, only before the event starts, not if paid
+// POST /registrations/:id/cancel
 async function cancelRegistration(req, res) {
   const [[row]] = await pool.query(
     `SELECT r.id, r.user_id, r.status, e.lifecycle, ${PAYMENT_STATUS_SQL} AS payment_status
@@ -100,7 +107,7 @@ async function listMine(req, res) {
 
 // ---------- organizer ----------
 
-// GET /events/:id/registrations  (requires 'registrations')
+// GET /events/:id/registrations
 async function listForEvent(req, res) {
   const event = req.event;
   const [rows] = await pool.query(
@@ -118,7 +125,6 @@ async function listForEvent(req, res) {
     [event.id]
   );
 
-  // Contact details are only for people who fully manage the event
   const showContact = req.eventPermissions.includes(EVENT_PERMISSIONS.MANAGE);
   const registrations = showContact ? rows : rows.map(({ email, phone, ...rest }) => rest);
 
@@ -173,7 +179,12 @@ async function approve(req, res) {
     conn.release();
   }
 
-  // Group 6: notify each person after commit
+  const message =
+    newStatus === REGISTRATION_STATUS.CONFIRMED
+      ? `You're in! Your registration for ${event.title} was approved.`
+      : `Your registration for ${event.title} was approved. Pay ₹${event.fee} to confirm your seat.`;
+  await notify(await userIdsOf(ids), message, `/events/${event.id}`);
+
   res.json({ message: `${ids.length} approved`, status: newStatus });
 }
 
@@ -214,11 +225,15 @@ async function reject(req, res) {
     conn.release();
   }
 
-  // Group 6: notify each person after commit
+  await notify(
+    await userIdsOf(ids),
+    `Your registration for ${event.title} was not approved: ${req.body.reason}`,
+    `/events/${event.id}`
+  );
   res.json({ message: `${ids.length} rejected` });
 }
 
-// POST /events/:id/registrations/complete   { registration_ids, completed }  (requires 'certificates')
+// POST /events/:id/registrations/complete   { registration_ids, completed }
 async function complete(req, res) {
   const event = req.event;
   if (event.certificate_criteria !== 'completion') {

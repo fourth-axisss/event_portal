@@ -35,6 +35,9 @@ app.use('/api', require('./routes/eventRoutes'));
 
 app.use('/api', require('./routes/registrationRoutes'));
 
+app.use('/api', require('./routes/paymentRoutes'));
+app.use('/api', require('./routes/notificationRoutes'));
+
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
