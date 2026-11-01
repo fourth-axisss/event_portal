@@ -382,3 +382,51 @@ h1, h2, h3, .font-serif {
     top: 1rem;
   }
 }
+
+
+
+
+/* Registration progress trail */
+.trail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.8rem;
+}
+.trail li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted);
+}
+.trail li + li::before {
+  content: '';
+  width: 1.25rem;
+  height: 1px;
+  background: var(--line);
+  margin: 0 0.35rem;
+}
+.trail .dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  border: 2px solid #c9c4bd;
+  background: #fff;
+}
+.trail .done {
+  color: var(--ink);
+}
+.trail .done .dot {
+  background: #1e6b34;
+  border-color: #1e6b34;
+}
+.trail .current {
+  color: var(--brand);
+  font-weight: 600;
+}
+.trail .current .dot {
+  border-color: var(--brand);
+}

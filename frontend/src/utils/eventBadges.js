@@ -1,8 +1,9 @@
 import { REGISTRATION_LABELS } from './format';
 
 const LIVE_STATUSES = ['pending', 'approved', 'confirmed'];
-const STATUS_TONES = { pending: 'info', approved: 'info', confirmed: 'success', rejected: 'danger', cancelled: 'muted' };
+//const STATUS_TONES = { pending: 'info', approved: 'info', confirmed: 'success', rejected: 'danger', cancelled: 'muted' };
 
+export const STATUS_TONES = { pending: 'info', approved: 'info', confirmed: 'success', rejected: 'danger', cancelled: 'muted' };
 export function seatsLeft(event) {
   if (!event.capacity) return null; // no limit
   return Math.max(event.capacity - (event.my?.seats_taken ?? 0), 0);

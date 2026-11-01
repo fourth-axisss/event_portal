@@ -5,6 +5,7 @@ import Login from './pages/auth/Login';
 import Dashboard from './pages/participant/Dashboard';
 import BrowseEvents from './pages/participant/BrowseEvents';
 import EventDetail from './pages/participant/EventDetail';
+import MyRegistrations from './pages/participant/MyRegistrations';
 import OrganizeHome from './pages/organize/OrganizeHome';
 import EventForm from './pages/organize/EventForm';
 import EventControl from './pages/organize/EventControl/EventControl';
@@ -14,6 +15,8 @@ import FestsClubs from './pages/admin/FestsClubs';
 import DepartmentsVenues from './pages/admin/DepartmentsVenues';
 import EventTypes from './pages/admin/EventTypes';
 import { ROLES } from './utils/constants';
+
+
 
 export default function App() {
   return (
@@ -25,6 +28,7 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/events" element={<BrowseEvents />} />
           <Route path="/events/:id" element={<EventDetail />} />
+          <Route path="/me/registrations" element={<MyRegistrations />} />
 
           <Route path="/organize" element={<OrganizeHome />} />
           <Route path="/organize/new" element={<EventForm />} />
