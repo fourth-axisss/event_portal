@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const path = require('path');
 const pool = require('../db/pool');
 const { canView } = require('../services/permissionService');
@@ -25,32 +26,26 @@ async function removePoster(req, res) {
 
 // ---------- event files ----------
 
-// POST /events/:id/files   (multipart: field "file", optional text field "title")
+// POST /events/:id/files   (multipart: text field "title", file field "file")
+// The file arrives in memory (req.file.buffer) and is stored in event_files.data.
 async function uploadEventFile(req, res) {
   const original = req.file.originalname;
   const title = (req.body.title || '').trim() || path.parse(original).name;
-  if (title.length > 150) {
-    await removeFile(req.file.path);
-    return res.status(400).json({ message: 'Title can be at most 150 characters' });
-  }
+  if (title.length > 150) return res.status(400).json({ message: 'Title can be at most 150 characters' });
 
-  try {
-    const [result] = await pool.query('INSERT INTO event_files SET ?', [
-      {
-        event_id: req.event.id,
-        title,
-        stored_name: req.file.filename,
-        original_name: original.slice(0, 255),
-        mime_type: req.file.mimetype,
-        size_bytes: req.file.size,
-        uploaded_by: req.user.id,
-      },
-    ]);
-    res.status(201).json({ message: 'File uploaded', id: result.insertId });
-  } catch (err) {
-    await removeFile(req.file.path); // never leave a file on disk without its row
-    throw err;
-  }
+  const [result] = await pool.query('INSERT INTO event_files SET ?', [
+    {
+      event_id: req.event.id,
+      title,
+      stored_name: `${crypto.randomUUID()}${path.extname(original).toLowerCase()}`, // unique id for the file
+      original_name: original.slice(0, 255),
+      mime_type: req.file.mimetype,
+      size_bytes: req.file.size,
+      data: req.file.buffer,
+      uploaded_by: req.user.id,
+    },
+  ]);
+  res.status(201).json({ message: `"${title}" uploaded`, id: result.insertId });
 }
 
 // PATCH /events/:id/files/:fileId   { title }
@@ -72,17 +67,28 @@ async function deleteEventFile(req, res) {
   ]);
   if (!rows[0]) return res.status(404).json({ message: 'File not found' });
 
-  await pool.query('DELETE FROM event_files WHERE id = ?', [req.params.fileId]);
-  await removeFile(path.join(PRIVATE_FILES_DIR, rows[0].stored_name));
+  await pool.query('DELETE FROM event_files WHERE id = ?', [req.params.fileId]); // the file's bytes go with the row
+  await removeFile(path.join(PRIVATE_FILES_DIR, rows[0].stored_name)); // older files kept on disk; none = fine
   res.json({ message: 'File deleted' });
 }
 
+// 'Brochure (final).pdf' → a Content-Disposition header that is safe for any file name
+function contentDisposition(type, fileName) {
+  const ascii = fileName.replace(/[^\x20-\x7e]/g, '_').replace(/["\\]/g, '_');
+  const utf8 = encodeURIComponent(fileName).replace(/['()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+  return `${type}; filename="${ascii}"; filename*=UTF-8''${utf8}`;
+}
+
 // GET /files/:fileId/download — only for people who can view the file's event
+// Sent "inline" so a PDF or image opens in the browser; ?download=1 asks the browser to save it instead.
 async function downloadFile(req, res) {
   const fileId = Number(req.params.fileId);
   if (!Number.isInteger(fileId) || fileId < 1) return res.status(400).json({ message: 'Invalid file id' });
 
-  const [files] = await pool.query('SELECT event_id, stored_name, original_name FROM event_files WHERE id = ?', [fileId]);
+  const [files] = await pool.query(
+    'SELECT event_id, stored_name, original_name, mime_type, data FROM event_files WHERE id = ?',
+    [fileId]
+  );
   const file = files[0];
   if (!file) return res.status(404).json({ message: 'File not found' });
 
@@ -91,9 +97,22 @@ async function downloadFile(req, res) {
     return res.status(404).json({ message: 'File not found' });
   }
 
-  res.download(path.join(PRIVATE_FILES_DIR, file.stored_name), file.original_name, (err) => {
-    if (err && !res.headersSent) res.status(404).json({ message: 'The file is missing on the server' });
+  const disposition = req.query.download === '1' ? 'attachment' : 'inline';
+
+  // Files uploaded before files moved into the database are still read from disk
+  if (!file.data) {
+    return res.download(path.join(PRIVATE_FILES_DIR, file.stored_name), file.original_name, (err) => {
+      if (err && !res.headersSent) res.status(404).json({ message: 'The file is missing on the server' });
+    });
+  }
+
+  res.set({
+    'Content-Type': file.mime_type,
+    'Content-Disposition': contentDisposition(disposition, file.original_name),
+    'X-Content-Type-Options': 'nosniff',
+    'Cache-Control': 'private, no-store',
   });
+  res.send(file.data);
 }
 
 // ---------- logos (admin) ----------

@@ -227,7 +227,8 @@ import PayButton from '../../components/PayButton';
 import StatusBadge from '../../components/StatusBadge';
 import TeamPanel from '../../components/TeamPanel';
 import { uploadUrl } from '../../utils/assets';
-import { downloadFile } from '../../utils/download';
+import { canOpenInBrowser, openFile } from '../../utils/download';
+import { fileTypeLabel, formatFileSize } from '../../utils/files';
 import { getEventBadges, seatsLeft } from '../../utils/eventBadges';
 import { describeEligibility, formatDateTime, formatRange, REGISTRATION_LABELS, SCOPE_LABELS } from '../../utils/format';
 import useLoad from '../../utils/useLoad';
@@ -387,12 +388,12 @@ export default function EventDetail() {
       ? `Umbrella event · ${event.fest_name}`
       : `${event.type_name} · ${event.club_name || event.fest_name || SCOPE_LABELS[event.scope]}`;
 
-  async function handleDownload(file) {
+  async function handleOpen(file) {
     setDownloadError('');
     try {
-      await downloadFile(`/files/${file.id}/download`, file.original_name);
+      await openFile(`/files/${file.id}/download`, file.original_name, file.mime_type);
     } catch {
-      setDownloadError(`Could not download ${file.title}. Please try again.`);
+      setDownloadError(`Could not open ${file.title}. Please try again.`);
     }
   }
 
@@ -456,9 +457,13 @@ export default function EventDetail() {
                   <ListGroup.Item key={f.id} className="d-flex justify-content-between align-items-center gap-2">
                     <span>
                       {f.title}
-                      <span className="small text-muted ms-2">{Math.ceil(f.size_bytes / 1024)} KB</span>
+                      <span className="small text-muted ms-2">
+                        {fileTypeLabel(f)} · {formatFileSize(f.size_bytes)}
+                      </span>
                     </span>
-                    <Button size="sm" variant="outline-primary" onClick={() => handleDownload(f)}>Download</Button>
+                    <Button size="sm" variant="outline-primary" onClick={() => handleOpen(f)}>
+                      {canOpenInBrowser(f.mime_type) ? 'Open' : 'Download'}
+                    </Button>
                   </ListGroup.Item>
                 ))}
               </ListGroup>

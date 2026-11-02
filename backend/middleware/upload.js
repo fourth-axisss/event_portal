@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
-const { PUBLIC_DIR, PRIVATE_FILES_DIR } = require('../services/fileStorage');
+const { PUBLIC_DIR } = require('../services/fileStorage');
 
 const OFFICE_FALLBACK = 'application/octet-stream'; // some browsers send this for Office files
 
@@ -20,17 +20,23 @@ const DOCUMENT_TYPES = {
   '.xlsx': ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', OFFICE_FALLBACK],
 };
 
+// dir set   → the file is written to that folder (req.file.path)
+// dir unset → the file is kept in memory (req.file.buffer), e.g. to store it in the database
 function makeUploader({ dir, field, types, maxMb, typeLabel }) {
-  fs.mkdirSync(dir, { recursive: true }); // create the folder if it does not exist yet
-
-  const upload = multer({
-    storage: multer.diskStorage({
+  let storage = multer.memoryStorage();
+  if (dir) {
+    fs.mkdirSync(dir, { recursive: true }); // create the folder if it does not exist yet
+    storage = multer.diskStorage({
       destination: dir,
       filename: (req, file, cb) => {
         const ext = path.extname(file.originalname).toLowerCase();
         cb(null, `${crypto.randomUUID()}${ext}`);
       },
-    }),
+    });
+  }
+
+  const upload = multer({
+    storage,
     limits: { fileSize: maxMb * 1024 * 1024, files: 1 },
     fileFilter: (req, file, cb) => {
       const ext = path.extname(file.originalname).toLowerCase();
@@ -75,11 +81,12 @@ const logoUpload = makeUploader({
   typeLabel: 'JPG or PNG',
 });
 
+// Event files are kept in memory and saved into MySQL (event_files.data), because the
+// free hosting's disk is wiped on every restart. 5 MB keeps the database small.
 const documentUpload = makeUploader({
-  dir: PRIVATE_FILES_DIR,
   field: 'file',
   types: DOCUMENT_TYPES,
-  maxMb: 10,
+  maxMb: 5,
   typeLabel: 'PDF, Word, PowerPoint, Excel, JPG or PNG',
 });
 

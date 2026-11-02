@@ -291,6 +291,7 @@ CREATE TABLE event_files (
   original_name  VARCHAR(255)  NOT NULL,
   mime_type      VARCHAR(100)  NOT NULL,
   size_bytes     INT UNSIGNED  NOT NULL,
+  data           LONGBLOB      NULL,      -- the file itself (kept in the database so it survives server restarts)
   uploaded_by    INT UNSIGNED  NOT NULL,
   created_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
