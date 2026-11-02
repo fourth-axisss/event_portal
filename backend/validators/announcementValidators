@@ -1,0 +1,12 @@
+const { body, param } = require('express-validator');
+
+const createRules = [
+  body('title').isString().trim().notEmpty().withMessage('Give the announcement a title')
+    .isLength({ max: 150 }).withMessage('Title can be at most 150 characters'),
+  body('body').isString().trim().notEmpty().withMessage('Write the announcement')
+    .isLength({ max: 5000 }).withMessage('The message can be at most 5000 characters'),
+];
+
+const deleteRules = [param('announcementId').isInt({ min: 1 }).withMessage('Invalid announcement id').toInt()];
+
+module.exports = { createRules, deleteRules };

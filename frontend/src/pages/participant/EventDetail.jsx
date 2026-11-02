@@ -221,6 +221,7 @@ import PayButton from '../../components/PayButton';
 
 
 import FeedbackForm from '../../components/FeedbackForm';
+import AnnouncementList from '../../components/AnnouncementList';
 
 
 
@@ -428,7 +429,9 @@ export default function EventDetail() {
       </div>
 
       <Row className="g-4">
-        <Col lg={8}>
+                <Col lg={8}>
+          <AnnouncementList eventId={event.id} hideWhenEmpty />
+
           {event.description && (
             <Card body className="mb-4">
               <div className="section-label">About</div>

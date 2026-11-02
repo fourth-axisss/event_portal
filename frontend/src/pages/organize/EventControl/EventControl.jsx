@@ -12,6 +12,7 @@ import AttendanceTab from './AttendanceTab';
 import CertificatesTab from './CertificatesTab';
 import FeedbackTab from './FeedbackTab';
 import DelegatesTab from './DelegatesTab';
+import AnnouncementsTab from './AnnouncementsTab';
 
 export default function EventControl() {
   const { id } = useParams();
@@ -29,11 +30,14 @@ export default function EventControl() {
     registrations: takesRegistrations && permissions.includes('registrations'),
     attendance: takesRegistrations && permissions.includes('attendance'),
     certificates: takesRegistrations && permissions.includes('certificates'),
+    announcements: permissions.includes('announcements_files'),
     feedback: takesRegistrations && canManage,
     delegates: canManage && event.kind === 'normal',
     sessions: canManage && event.kind === 'normal',
   };
-  const firstAllowed = canManage ? 'overview' : ['registrations', 'attendance', 'certificates'].find((t) => show[t]) || 'overview';
+  const firstAllowed = canManage
+    ? 'overview'
+    : ['registrations', 'attendance', 'certificates', 'announcements'].find((t) => show[t]) || 'overview';
   const activeTab = searchParams.get('tab') || firstAllowed;
   const editable = canManage && event.status !== 'cancelled' && event.lifecycle !== 'completed';
   const isDelegate = !canManage && permissions.length > 0;
@@ -96,6 +100,11 @@ export default function EventControl() {
         {show.certificates && (
           <Tab eventKey="certificates" title="Certificates">
             <CertificatesTab event={event} />
+          </Tab>
+        )}
+        {show.announcements && (
+          <Tab eventKey="announcements" title="Announcements">
+            <AnnouncementsTab event={event} />
           </Tab>
         )}
         {show.feedback && (

@@ -43,6 +43,15 @@ app.use('/api', require('./routes/attendanceRoutes'));
 app.use('/api', require('./routes/certificateRoutes'));
 app.use('/api', require('./routes/feedbackRoutes'));
 
+
+
+app.use('/api', require('./routes/delegationRoutes'));
+
+
+
+
+app.use('/api', require('./routes/announcementRoutes'));
+
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
