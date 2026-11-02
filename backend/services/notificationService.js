@@ -25,7 +25,7 @@ async function sendNotificationEmails(userIds, message, link) {
 const pool = require('../db/pool');
 const { sendEmail } = require('./emailService');
 
-const APP_URL = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+const APP_URL = (process.env.CLIENT_ORIGIN || 'http://localhost:5173').split(',')[0].trim();
 
 async function sendNotificationEmails(userIds, subject, body, link) {
   const [users] = await pool.query('SELECT email FROM users WHERE id IN (?) AND is_active = 1', [userIds]);

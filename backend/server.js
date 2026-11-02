@@ -9,7 +9,9 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_ORIGIN }));
+// One or more allowed sites, comma-separated, e.g. "http://localhost:5173,https://lnmiit-events.vercel.app"
+const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173').split(',').map((o) => o.trim());
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
    app.use(
      '/uploads',
