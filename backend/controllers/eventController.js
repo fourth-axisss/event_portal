@@ -227,8 +227,17 @@ async function updateEvent(req, res) {
   if (Number(merged.fee) !== Number(current.fee) && (await countRegistrations(id, SEAT_TAKING_STATUSES)) > 0) {
     return conflict(res, 'The fee cannot change after registrations have been approved');
   }
-  if (current.registration_required && !merged.registration_required && (await countRegistrations(id, ACTIVE_STATUSES)) > 0) {
+   if (current.registration_required && !merged.registration_required && (await countRegistrations(id, ACTIVE_STATUSES)) > 0) {
     return conflict(res, 'People have registered, so registration cannot be switched off');
+  }
+
+
+
+    if (Boolean(merged.is_team_event) !== Boolean(current.is_team_event)) {
+    const [[{ teams }]] = await pool.query("SELECT COUNT(*) AS teams FROM teams WHERE event_id = ? AND status <> 'cancelled'", [id]);
+    if (teams > 0 || (await countRegistrations(id, ACTIVE_STATUSES)) > 0) {
+      return conflict(res, 'People have already signed up, so it cannot switch between team and individual registration');
+    }
   }
   if (current.kind === EVENT_KINDS.UMBRELLA) {
     const [[span]] = await pool.query(

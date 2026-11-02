@@ -52,6 +52,10 @@ app.use('/api', require('./routes/delegationRoutes'));
 
 app.use('/api', require('./routes/announcementRoutes'));
 
+
+
+app.use('/api', require('./routes/teamRoutes'));
+
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
