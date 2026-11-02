@@ -219,6 +219,11 @@ import PayButton from '../../components/PayButton';
 //import PayButton from '../../components/PayButton';
 
 
+
+import FeedbackForm from '../../components/FeedbackForm';
+
+
+
 import { useState } from 'react';
 import { Alert, Button, Card, Col, ListGroup, Row } from 'react-bootstrap';
 import { Link, useParams } from 'react-router-dom';
@@ -491,7 +496,18 @@ export default function EventDetail() {
 
         <Col lg={4}>
           <div className="sticky-panel">
-            <RegistrationPanel event={event} onChanged={reload} />
+                        <RegistrationPanel event={event} onChanged={reload} />
+
+            {event.lifecycle === 'completed' && event.my.registration?.status === 'confirmed' && (
+              <Card body className="mb-4">
+                <div className="section-label">Your feedback</div>
+                {event.my.feedback_given ? (
+                  <p className="mb-0 text-muted">Thanks for your feedback.</p>
+                ) : (
+                  <FeedbackForm eventId={event.id} onDone={reload} />
+                )}
+              </Card>
+            )}
 
             <Card body>
               <div className="section-label">Details</div>

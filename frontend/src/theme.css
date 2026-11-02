@@ -494,3 +494,56 @@ h1, h2, h3, .font-serif {
 .bell-item.unread .bell-text {
   font-weight: 600;
 }
+
+/* Star rating */
+.star-input {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+.star-input button {
+  border: 0;
+  background: transparent;
+  font-size: 1.9rem;
+  line-height: 1;
+  padding: 0 0.1rem;
+  color: #d6d1ca;
+  cursor: pointer;
+}
+.star-input button.on {
+  color: #e0a100;
+}
+.star-input button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.stars-static {
+  color: #e0a100;
+  letter-spacing: 0.1em;
+}
+
+/* Feedback distribution */
+.feedback-row {
+  display: grid;
+  grid-template-columns: 3rem 1fr 2.5rem;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.35rem;
+}
+.feedback-bar {
+  height: 0.55rem;
+  background: #efebe6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.feedback-bar span {
+  display: block;
+  height: 100%;
+  background: var(--brand);
+}
+.big-number {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 2.5rem;
+  line-height: 1;
+  color: var(--brand);
+}

@@ -90,3 +90,12 @@ export function timeAgo(text) {
   if (seconds < 7 * 86400) return `${Math.floor(seconds / 86400)} day${seconds < 2 * 86400 ? '' : 's'} ago`;
   return formatDate(text);
 }
+
+
+
+
+export const CERTIFICATE_TYPE_LABELS = {
+  participation: 'Participation',
+  merit: 'Merit',
+  organizer: 'Appreciation',
+};

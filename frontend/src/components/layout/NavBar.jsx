@@ -70,6 +70,10 @@ export default function NavBar() {
             <Nav.Link as={NavLink} to="/" end>Dashboard</Nav.Link>
             {!isAdmin && <Nav.Link as={NavLink} to="/events">Browse events</Nav.Link>}
             {!isAdmin && <Nav.Link as={NavLink} to="/me/registrations">My registrations</Nav.Link>}
+
+
+                        {!isAdmin && <Nav.Link as={NavLink} to="/me/certificates">Certificates</Nav.Link>}
+                        
             {capabilities?.can_organize && <Nav.Link as={NavLink} to="/organize">Organize</Nav.Link>}
             {isAdmin && <Nav.Link as={NavLink} to="/admin">Admin</Nav.Link>}
           </Nav>
