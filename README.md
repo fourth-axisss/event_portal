@@ -5,7 +5,7 @@ A web portal where LNMIIT faculty and student organisers (fests, clubs) create a
 **Live demo:** https://event-portal-gold.vercel.app
 *(Hosted on free tiers: the first request after ~15 minutes of inactivity can take up to a minute while the server wakes up.)*
 
-![Login page](docs/screenshots/login.png)
+
 
 ---
 
