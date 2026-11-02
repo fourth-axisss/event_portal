@@ -34,7 +34,7 @@ export function getEventBadges(event) {
       badges.push({ label: `${left} seat${left === 1 ? '' : 's'} left`, tone: 'warning' });
     }
   }
-
+  if (registrable && event.is_team_event) badges.push({ label: `Teams of ${event.team_min}–${event.team_max}`, tone: 'neutral' });
   if (!registrable) badges.push({ label: 'No registration needed', tone: 'neutral' });
   else badges.push({ label: Number(event.fee) > 0 ? `₹${event.fee}` : 'Free', tone: 'neutral' });
 

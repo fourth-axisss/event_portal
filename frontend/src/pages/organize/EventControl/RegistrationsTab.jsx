@@ -49,8 +49,14 @@ export default function RegistrationsTab({ event, onChanged }) {
   const visibleSelectable = rows.filter(isSelectable);
   const allVisibleTicked = visibleSelectable.length > 0 && visibleSelectable.every((r) => selected.includes(r.id));
 
-  function toggleRow(id) {
-    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+   // Ticking a team member ticks the whole team (the server approves/rejects teams together too)
+  function toggleRow(row) {
+    const group = row.team_name
+      ? all.filter((r) => r.team_name === row.team_name && isSelectable(r)).map((r) => r.id)
+      : [row.id];
+    setSelected((prev) =>
+      prev.includes(row.id) ? prev.filter((id) => !group.includes(id)) : [...new Set([...prev, ...group])]
+    );
   }
 
   function toggleAllVisible() {
@@ -99,6 +105,13 @@ export default function RegistrationsTab({ event, onChanged }) {
         <span>{data.auto_approve ? 'Approved automatically' : 'You approve each registration'}</span>
       </div>
 
+
+
+
+
+      {data.is_team_event && (
+        <p className="small text-muted">Teams are approved and rejected together: ticking one member selects the whole team. A team takes one seat.</p>
+      )}
       <Nav variant="pills" className="mb-3 gap-1" activeKey={activeFilter} onSelect={(key) => { setFilter(key); setSelected([]); }}>
         {FILTERS.map((f) => (
           <Nav.Item key={f}>
@@ -164,13 +177,16 @@ export default function RegistrationsTab({ event, onChanged }) {
               <tr key={r.id}>
                 <td>
                   {isSelectable(r) && (
-                    <Form.Check aria-label={`Select ${r.name}`} checked={selected.includes(r.id)} onChange={() => toggleRow(r.id)} />
+                    <Form.Check aria-label={`Select ${r.name}`} checked={selected.includes(r.id)} onChange={() => toggleRow(r)} />
                   )}
                 </td>
                                 <td>
                   {r.name}
                   {isOwnRow(r) && <span className="soft-badge tone-muted ms-2">You</span>}
-                  <div className="small text-muted">{r.roll_no || 'Faculty'}</div>
+                                    <div className="small text-muted">
+                    {r.roll_no || 'Faculty'}
+                    {r.team_name && ` · Team ${r.team_name}`}
+                  </div>
                 </td>
                 <td className="small">{r.program ? `${r.program} · Y${r.year}` : '—'} {r.department_code && `· ${r.department_code}`}</td>
                 <td>

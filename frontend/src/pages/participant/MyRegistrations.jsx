@@ -75,7 +75,8 @@ export default function MyRegistrations() {
       )}
 
       {items.map((r) => {
-        const canCancel = LIVE_STATUSES.includes(r.status) && NOT_STARTED.slice(0, 2).includes(r.lifecycle);
+                const leadsOrSolo = !r.team_name || Boolean(r.is_team_leader);
+        const canCancel = leadsOrSolo && LIVE_STATUSES.includes(r.status) && NOT_STARTED.slice(0, 2).includes(r.lifecycle);
         return (
           <Card body key={r.id} className="mb-3">
             <div className="d-flex flex-wrap gap-2 justify-content-between align-items-start">
@@ -83,9 +84,10 @@ export default function MyRegistrations() {
                 <h2 className="h6 mb-1">
                   <Link to={`/events/${r.event_id}`}>{r.title}</Link>
                 </h2>
-                <div className="small text-muted mb-2">
+                                <div className="small text-muted mb-2">
                   {formatRange(r.start_time, r.end_time)}
                   {r.venue_name && ` · ${r.venue_name}`}
+                  {r.team_name && ` · Team ${r.team_name}${r.is_team_leader ? ' (leader)' : ''}`}
                 </div>
               </div>
               <span className={`soft-badge tone-${r.event_status === 'cancelled' ? 'danger' : STATUS_TONES[r.status]}`}>
@@ -100,9 +102,9 @@ export default function MyRegistrations() {
             )}
 
 
-//After this payment......its there
 
-                        {r.status === 'approved' && r.event_status !== 'cancelled' && (
+
+                                    {r.status === 'approved' && r.event_status !== 'cancelled' && leadsOrSolo && (
               <div className="mt-2">
                 <PayButton registrationId={r.id} amount={r.fee} title={r.title} onDone={reload} size="sm" />
               </div>

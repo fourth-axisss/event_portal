@@ -21,7 +21,10 @@ const EMPTY_FORM = {
   registration_deadline: '',
   capacity: '',
   fee: '0',
-  auto_approve: true,
+   auto_approve: true,
+  is_team_event: false,
+  team_min: 2,
+  team_max: 4,
   certificate_criteria: 'attendance',
   min_attendance_percent: 75,
   cells: [], // ticked eligibility cells as 'UG-1', 'PG-2', ...
@@ -67,7 +70,10 @@ function formFromEvent(e) {
     registration_deadline: toInputDateTime(e.registration_deadline),
     capacity: e.capacity ?? '',
     fee: String(e.fee ?? 0),
-    auto_approve: Boolean(e.auto_approve),
+       auto_approve: Boolean(e.auto_approve),
+    is_team_event: Boolean(e.is_team_event),
+    team_min: e.team_min ?? 2,
+    team_max: e.team_max ?? 4,
     certificate_criteria: e.certificate_criteria,
     min_attendance_percent: e.min_attendance_percent,
     cells: e.eligibility.cells.map((c) => `${c.program}-${c.year}`),
@@ -156,7 +162,10 @@ export default function EventForm() {
         registration_deadline: form.registration_required ? form.registration_deadline || null : null,
         capacity: toNumberOrNull(form.capacity),
         fee: toNumberOrNull(form.fee) ?? 0,
-        auto_approve: form.auto_approve,
+               auto_approve: form.auto_approve,
+        is_team_event: form.registration_required && form.is_team_event,
+        team_min: form.registration_required && form.is_team_event ? toNumberOrNull(form.team_min) : null,
+        team_max: form.registration_required && form.is_team_event ? toNumberOrNull(form.team_max) : null,
         certificate_criteria: form.registration_required ? form.certificate_criteria : 'none',
         min_attendance_percent: toNumberOrNull(form.min_attendance_percent) ?? 75,
         eligibility: {
@@ -397,7 +406,17 @@ export default function EventForm() {
                     <Form.Label htmlFor="ev-fee">Fee (₹)</Form.Label>
                     <Form.Control id="ev-fee" type="number" min={0} step="1" value={form.fee} onChange={(e) => setField('fee', e.target.value)} />
                   </Col>
-                  <Col xs={12}>
+
+
+
+
+
+
+
+
+
+
+                                      <Col xs={12}>
                     <Form.Check
                       type="switch"
                       id="ev-auto"
@@ -406,6 +425,52 @@ export default function EventForm() {
                       onChange={(e) => setField('auto_approve', e.target.checked)}
                     />
                   </Col>
+
+
+                    
+
+
+
+                                    <Col xs={12}>
+                    <Form.Check
+                      type="switch"
+                      id="ev-team"
+                      label="Participants register as teams"
+                      checked={form.is_team_event}
+                      onChange={(e) => setField('is_team_event', e.target.checked)}
+                    />
+                  </Col>
+                  {form.is_team_event && (
+                    <>
+                      <Col xs={6} md={3}>
+                        <Form.Label htmlFor="ev-team-min">Smallest team</Form.Label>
+                        <Form.Control
+                          id="ev-team-min"
+                          type="number"
+                          min={1}
+                          max={50}
+                          value={form.team_min}
+                          onChange={(e) => setField('team_min', e.target.value)}
+                          required
+                        />
+                      </Col>
+                      <Col xs={6} md={3}>
+                        <Form.Label htmlFor="ev-team-max">Largest team</Form.Label>
+                        <Form.Control
+                          id="ev-team-max"
+                          type="number"
+                          min={1}
+                          max={50}
+                          value={form.team_max}
+                          onChange={(e) => setField('team_max', e.target.value)}
+                          required
+                        />
+                      </Col>
+                      <Col xs={12}>
+                        <Form.Text muted>Seats count teams: 10 seats means up to 10 teams. The team leader pays the fee once.</Form.Text>
+                      </Col>
+                    </>
+                  )}
                   <Col md={6}>
                     <Form.Label htmlFor="ev-criteria">Certificates</Form.Label>
                     <Form.Select id="ev-criteria" value={form.certificate_criteria} onChange={(e) => setField('certificate_criteria', e.target.value)}>

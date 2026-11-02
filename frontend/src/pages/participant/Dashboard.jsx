@@ -10,10 +10,14 @@ const NOT_OVER = ['registration_open', 'registration_closed', 'upcoming', 'ongoi
 
 function ParticipantSummary() {
   const { data: regs } = useLoad('/me/registrations');
+    const { data: teams } = useLoad('/me/teams');
   if (!regs) return null;
 
   const active = regs.filter((r) => r.event_status !== 'cancelled');
-  const attention = [
+    const attention = [
+    ...(teams ?? [])
+      .filter((t) => t.my_status === 'invited')
+      .map((t) => ({ id: `inv-${t.id}`, eventId: t.event_id, text: `${t.leader_name} invited you to team ${t.name} for ${t.title}` })),
     ...active
       .filter((r) => r.status === 'approved' && NOT_OVER.includes(r.lifecycle))
       .map((r) => ({ id: `pay-${r.id}`, eventId: r.event_id, text: `Pay ₹${r.fee} to confirm your seat at ${r.title}` })),

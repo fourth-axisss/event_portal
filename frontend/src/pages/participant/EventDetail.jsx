@@ -213,27 +213,19 @@ export default function EventDetail() {
 
 */
 
-import PayButton from '../../components/PayButton';
-
-
-//import PayButton from '../../components/PayButton';
-
-
-
-import FeedbackForm from '../../components/FeedbackForm';
-import AnnouncementList from '../../components/AnnouncementList';
-
-
-
 import { useState } from 'react';
 import { Alert, Button, Card, Col, ListGroup, Row } from 'react-bootstrap';
 import { Link, useParams } from 'react-router-dom';
 import api, { getErrorMessage } from '../../api/client';
+import AnnouncementList from '../../components/AnnouncementList';
 import BadgeList from '../../components/BadgeList';
 import ConfirmModal from '../../components/ConfirmModal';
 import EventCard from '../../components/EventCard';
+import FeedbackForm from '../../components/FeedbackForm';
 import Loading from '../../components/Loading';
+import PayButton from '../../components/PayButton';
 import StatusBadge from '../../components/StatusBadge';
+import TeamPanel from '../../components/TeamPanel';
 import { uploadUrl } from '../../utils/assets';
 import { downloadFile } from '../../utils/download';
 import { getEventBadges, seatsLeft } from '../../utils/eventBadges';
@@ -279,7 +271,8 @@ function registrationMessage(event) {
     return { tone: 'warning', text: `It overlaps with ${my.clash_with.map((c) => c.title).join(', ')}, which you've registered for.` };
   }
   if (seatsLeft(event) === 0) return { tone: 'danger', text: 'All seats are taken.' };
-  return { tone: 'success', text: `Registration is open until ${formatDateTime(event.registration_deadline)}.` };
+  const teamNote = event.is_team_event ? ` Register as a team of ${event.team_min}–${event.team_max}.` : '';
+  return { tone: 'success', text: `Registration is open until ${formatDateTime(event.registration_deadline)}.${teamNote}` };
 }
 
 function RegistrationPanel({ event, onChanged }) {
@@ -291,9 +284,10 @@ function RegistrationPanel({ event, onChanged }) {
   const my = event.my;
   const status = my.registration?.status;
   const message = registrationMessage(event);
+  const isTeam = Boolean(event.is_team_event);
 
-  // The button follows exactly the same flags as the message
   const canRegister =
+    !isTeam &&
     isRegistrable(event) &&
     !my.can_manage &&
     event.lifecycle === 'registration_open' &&
@@ -301,7 +295,7 @@ function RegistrationPanel({ event, onChanged }) {
     my.eligible === true &&
     my.clash_with.length === 0 &&
     seatsLeft(event) !== 0;
-  const canCancel = LIVE_STATUSES.includes(status) && ['registration_open', 'registration_closed'].includes(event.lifecycle);
+  const canCancel = !isTeam && LIVE_STATUSES.includes(status) && ['registration_open', 'registration_closed'].includes(event.lifecycle);
 
   async function handleRegister() {
     setBusy(true);
@@ -314,7 +308,7 @@ function RegistrationPanel({ event, onChanged }) {
       setError(getErrorMessage(err));
     } finally {
       setBusy(false);
-      onChanged(); // refresh either way: something may have changed since the page loaded
+      onChanged();
     }
   }
 
@@ -352,20 +346,16 @@ function RegistrationPanel({ event, onChanged }) {
       {canRegister && !event.auto_approve && (
         <p className="small text-muted mt-2 mb-0">An organizer reviews each registration.</p>
       )}
-            {status === 'approved' && (
-        <PayButton
-          registrationId={my.registration.id}
-          amount={event.fee}
-          title={event.title}
-          onDone={onChanged}
-          className="w-100 mt-3"
-        />
+      {!isTeam && status === 'approved' && (
+        <PayButton registrationId={my.registration.id} amount={event.fee} title={event.title} onDone={onChanged} className="w-100 mt-3" />
       )}
       {canCancel && (
         <Button variant="link" className="text-danger p-0 mt-3" onClick={() => setShowCancel(true)} disabled={busy}>
           Cancel my registration
         </Button>
       )}
+
+      {isTeam && isRegistrable(event) && !my.can_manage && <TeamPanel event={event} onChanged={onChanged} />}
 
       <ConfirmModal
         show={showCancel}
@@ -429,7 +419,7 @@ export default function EventDetail() {
       </div>
 
       <Row className="g-4">
-                <Col lg={8}>
+        <Col lg={8}>
           <AnnouncementList eventId={event.id} hideWhenEmpty />
 
           {event.description && (
@@ -499,7 +489,7 @@ export default function EventDetail() {
 
         <Col lg={4}>
           <div className="sticky-panel">
-                        <RegistrationPanel event={event} onChanged={reload} />
+            <RegistrationPanel event={event} onChanged={reload} />
 
             {event.lifecycle === 'completed' && event.my.registration?.status === 'confirmed' && (
               <Card body className="mb-4">
@@ -530,9 +520,21 @@ export default function EventDetail() {
                 {Boolean(event.registration_required) && (
                   <>
                     <dt>Fee</dt>
-                    <dd>{Number(event.fee) > 0 ? `₹${event.fee}` : 'Free'}</dd>
+                    <dd>
+                      {Number(event.fee) > 0 ? `₹${event.fee}` : 'Free'}
+                      {event.is_team_event && Number(event.fee) > 0 ? ' per team' : ''}
+                    </dd>
                     <dt>Seats</dt>
-                    <dd>{event.capacity ? `${seatsLeft(event)} of ${event.capacity} left` : 'No limit'}</dd>
+                    <dd>
+                      {event.capacity ? `${seatsLeft(event)} of ${event.capacity} left` : 'No limit'}
+                      {event.is_team_event ? ' (teams)' : ''}
+                    </dd>
+                    {event.is_team_event && (
+                      <>
+                        <dt>Team size</dt>
+                        <dd>{event.team_min}–{event.team_max}</dd>
+                      </>
+                    )}
                     <dt>Who</dt>
                     <dd>
                       {grid}
