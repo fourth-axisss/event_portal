@@ -3,6 +3,7 @@
 -- Run with the ROOT connection in Workbench (needs temporary tables).
 -- =========================================================
 USE event_portal;
+   SET time_zone = '+05:30';
 SET SQL_SAFE_UPDATES = 0;
 
 -- ---------- 1. Who and what (looked up by name) ----------
@@ -33,8 +34,8 @@ SELECT @aman AS aman, @kabir AS kabir, @anil AS anil, @third AS third_student,
 
 -- ---------- 2. Remove earlier demo runs ----------
 DROP TEMPORARY TABLE IF EXISTS demo_ids;
-CREATE TEMPORARY TABLE demo_ids AS
-  SELECT id FROM events
+   CREATE TEMPORARY TABLE demo_ids (id INT UNSIGNED PRIMARY KEY)
+     SELECT id FROM events
    WHERE title IN ('Acoustic Evening', 'Club Auditions', 'Beatbox Battle', 'PG Jam Session',
                    'Guitar Basics Workshop', 'Plinth Tech Week', 'Hack Night', 'Live Coding Quiz',
                    'Cloud Fundamentals Workshop')
