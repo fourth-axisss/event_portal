@@ -59,6 +59,17 @@ async function issue(req, res) {
     rows = ids.map((id) => ({ user_id: id, rank_label: null }));
   }
 
+
+
+
+    // A delegate (no 'manage') cannot award themselves merit or appreciation
+  if (type !== 'participation' && !req.eventPermissions.includes(EVENT_PERMISSIONS.MANAGE)
+      && rows.some((r) => r.user_id === req.user.id)) {
+    return res.status(403).json({ message: 'You cannot award a certificate to yourself. Ask an event manager.' });
+  }
+
+
+  
   // Leave out people who already hold this type for this event
   const [existing] = await pool.query('SELECT user_id FROM certificates WHERE event_id = ? AND type = ?', [event.id, type]);
   const already = new Set(existing.map((e) => e.user_id));

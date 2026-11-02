@@ -31,6 +31,19 @@ async function userIdsOf(registrationIds) {
   return rows.map((r) => r.user_id);
 }
 
+
+
+//Delegate cant 
+async function refuseSelfAction(req, ids, action) {
+  if (req.eventPermissions.includes(EVENT_PERMISSIONS.MANAGE)) return;
+  const [[own]] = await pool.query('SELECT id FROM registrations WHERE event_id = ? AND user_id = ?', [
+    req.event.id,
+    req.user.id,
+  ]);
+  if (own && ids.includes(own.id)) {
+    throw new HttpError(403, `You cannot ${action} your own registration. Ask an event manager.`);
+  }
+}
 // ---------- participant ----------
 
 // POST /events/:id/registrations
@@ -146,7 +159,8 @@ async function listForEvent(req, res) {
 async function approve(req, res) {
   const event = req.event;
   if (eventIsOver(event)) return res.status(409).json({ message: 'This event is over or cancelled' });
-  const ids = unique(req.body.registration_ids);
+   const ids = unique(req.body.registration_ids);
+  await refuseSelfAction(req, ids, 'approve');
 
   const conn = await pool.getConnection();
   let newStatus;
@@ -192,7 +206,8 @@ async function approve(req, res) {
 async function reject(req, res) {
   const event = req.event;
   if (eventIsOver(event)) return res.status(409).json({ message: 'This event is over or cancelled' });
-  const ids = unique(req.body.registration_ids);
+    const ids = unique(req.body.registration_ids);
+  await refuseSelfAction(req, ids, 'reject');
 
   const conn = await pool.getConnection();
   try {
@@ -239,8 +254,9 @@ async function complete(req, res) {
   if (event.certificate_criteria !== 'completion') {
     return res.status(409).json({ message: 'This event gives certificates by attendance, not by completion' });
   }
-  const ids = unique(req.body.registration_ids);
+    const ids = unique(req.body.registration_ids);
   const done = req.body.completed;
+  await refuseSelfAction(req, ids, 'mark completion on');
 
   const conn = await pool.getConnection();
   try {

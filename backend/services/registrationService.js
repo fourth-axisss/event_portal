@@ -129,9 +129,11 @@ const {
   EVENT_KINDS,
   EVENT_STATUS,
   EVENT_LIFECYCLE,
+  EVENT_PERMISSIONS,
   REGISTRATION_STATUS,
   SEAT_TAKING_STATUSES,
   CLASH_STATUSES,
+         
 } = require('../config/constants');
 
 const LIVE_STATUSES = CLASH_STATUSES; // pending, approved, confirmed
@@ -263,8 +265,9 @@ async function register(user, eventId) {
   if (!participates(user, event.participate_rule)) {
     throw new HttpError(403, user.role === ROLES.ADMIN ? 'Admins cannot register for events' : `This event is not open to ${user.role}s`);
   }
-  if ((await getEventPermissions(user, event)).length > 0) {
-    throw new HttpError(403, 'You organize this event, so you cannot register for it');
+   // Managers (owner, coordinator, fest leader) cannot also participate; delegates can
+  if ((await getEventPermissions(user, event)).includes(EVENT_PERMISSIONS.MANAGE)) {
+    throw new HttpError(403, 'You manage this event, so you cannot register for it');
   }
 
   // 6–9: the same flags the badges use

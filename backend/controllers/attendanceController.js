@@ -1,10 +1,15 @@
 const pool = require('../db/pool');
 const { unique } = require('../services/eventService');
-const { EVENT_STATUS, REGISTRATION_STATUS } = require('../config/constants');
+const { EVENT_STATUS, EVENT_PERMISSIONS, REGISTRATION_STATUS } = require('../config/constants');
 
-// The integer rule from 03-database-schema.md: attended*100 >= min*total (and there are sessions)
 function meetsCriteria(attended, total, minPercent) {
   return total > 0 && attended * 100 >= minPercent * total;
+}
+
+// The caller's own registration id on this event, if they are a participant
+async function ownRegistrationId(eventId, userId) {
+  const [[row]] = await pool.query('SELECT id FROM registrations WHERE event_id = ? AND user_id = ?', [eventId, userId]);
+  return row ? row.id : null;
 }
 
 // GET /events/:id/attendance   (requires 'attendance')
@@ -32,10 +37,12 @@ async function getAttendance(req, res) {
     sessionsByRegistration.get(m.registration_id).push(m.session_id);
   }
 
+  const manages = req.eventPermissions.includes(EVENT_PERMISSIONS.MANAGE);
   const total = sessions.length;
   res.json({
     certificate_criteria: event.certificate_criteria,
     min_attendance_percent: event.min_attendance_percent,
+    own_registration_id: manages ? null : await ownRegistrationId(event.id, req.user.id),
     sessions,
     participants: participants.map((p) => {
       const present = sessionsByRegistration.get(p.registration_id) || [];
@@ -65,7 +72,11 @@ async function saveSessionAttendance(req, res) {
   if (!session) return res.status(404).json({ message: 'Session not found' });
   if (!session.started) return res.status(409).json({ message: 'Attendance can be marked once the session has started' });
 
-  const ids = unique(req.body.present_registration_ids);
+  // A delegate's own mark is never changed by their own save
+  const manages = req.eventPermissions.includes(EVENT_PERMISSIONS.MANAGE);
+  const ownId = manages ? null : await ownRegistrationId(event.id, req.user.id);
+  const ids = unique(req.body.present_registration_ids).filter((id) => id !== ownId);
+
   if (ids.length > 0) {
     const [[{ total }]] = await pool.query(
       'SELECT COUNT(*) AS total FROM registrations WHERE id IN (?) AND event_id = ? AND status = ?',
@@ -76,13 +87,18 @@ async function saveSessionAttendance(req, res) {
     }
   }
 
+  // Rows to keep: everyone ticked, plus the delegate's own row (left untouched)
+  const keep = ownId ? [...ids, ownId] : ids;
+
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
-    if (ids.length === 0) {
+    if (keep.length === 0) {
       await conn.query('DELETE FROM session_attendance WHERE session_id = ?', [sessionId]);
     } else {
-      await conn.query('DELETE FROM session_attendance WHERE session_id = ? AND registration_id NOT IN (?)', [sessionId, ids]);
+      await conn.query('DELETE FROM session_attendance WHERE session_id = ? AND registration_id NOT IN (?)', [sessionId, keep]);
+    }
+    if (ids.length > 0) {
       await conn.query(
         `INSERT IGNORE INTO session_attendance (session_id, event_id, registration_id, method, marked_by)
          VALUES ?`,
@@ -97,7 +113,8 @@ async function saveSessionAttendance(req, res) {
     conn.release();
   }
 
-  res.json({ message: `${session.title}: ${ids.length} present`, present: ids.length });
+  const [[{ present }]] = await pool.query('SELECT COUNT(*) AS present FROM session_attendance WHERE session_id = ?', [sessionId]);
+  res.json({ message: `${session.title}: ${present} present`, present });
 }
 
 module.exports = { getAttendance, saveSessionAttendance };
