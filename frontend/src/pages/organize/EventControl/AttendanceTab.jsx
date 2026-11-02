@@ -26,6 +26,7 @@ export default function AttendanceTab({ event }) {
     return <Alert variant="info">This event has no sessions, so there's nothing to mark. Add sessions on the Sessions tab.</Alert>;
   }
 
+  const ownId = data.own_registration_id; // set only for delegates who are also participants
   const startedSessions = sessions.filter((s) => s.started);
   const current =
     sessions.find((s) => s.id === sessionId) ?? startedSessions[startedSessions.length - 1] ?? sessions[0];
@@ -33,11 +34,18 @@ export default function AttendanceTab({ event }) {
   const present = ticked ?? saved;
   const editable = Boolean(current.started) && event.status !== 'cancelled';
   const byAttendance = data.certificate_criteria === 'attendance';
+  const ownSaved = ownId !== null && saved.includes(ownId);
 
   const term = search.trim().toLowerCase();
   const visible = term
     ? data.participants.filter((p) => p.name.toLowerCase().includes(term) || (p.roll_no ?? '').toLowerCase().includes(term))
     : data.participants;
+
+  // "All" / "None" never change your own saved mark
+  function markEveryone(allPresent) {
+    const others = allPresent ? data.participants.map((p) => p.registration_id).filter((id) => id !== ownId) : [];
+    setTicked(ownSaved ? [...others, ownId] : others);
+  }
 
   function chooseSession(id) {
     if (ticked !== null && !window.confirm('Discard the ticks you have not saved?')) return;
@@ -86,6 +94,9 @@ export default function AttendanceTab({ event }) {
       {notice && <Alert variant="success" className="py-2">{notice}</Alert>}
       {saveError && <Alert variant="danger" className="py-2">{saveError}</Alert>}
       {!current.started && <Alert variant="info" className="py-2">You can mark this session once it has started.</Alert>}
+      {ownId !== null && (
+        <Alert variant="secondary" className="py-2 small">You're also a participant, so an event manager marks your own attendance.</Alert>
+      )}
 
       <Card>
         <Card.Header className="d-flex flex-wrap gap-2 align-items-center">
@@ -100,12 +111,8 @@ export default function AttendanceTab({ event }) {
           <span className="small text-muted me-auto">
             {present.length} of {data.participants.length} present{ticked !== null && ' · unsaved changes'}
           </span>
-          <Button size="sm" variant="link" disabled={!editable} onClick={() => setTicked(data.participants.map((p) => p.registration_id))}>
-            All present
-          </Button>
-          <Button size="sm" variant="link" disabled={!editable} onClick={() => setTicked([])}>
-            None
-          </Button>
+          <Button size="sm" variant="link" disabled={!editable} onClick={() => markEveryone(true)}>All present</Button>
+          <Button size="sm" variant="link" disabled={!editable} onClick={() => markEveryone(false)}>None</Button>
           <Button size="sm" disabled={!editable || saving || ticked === null} onClick={save}>
             {saving ? 'Saving…' : `Save (${present.length} present)`}
           </Button>
@@ -125,28 +132,32 @@ export default function AttendanceTab({ event }) {
                 <td colSpan={3} className="text-center text-muted py-4">No confirmed participants.</td>
               </tr>
             )}
-            {visible.map((p) => (
-              <tr key={p.registration_id}>
-                <td>
-                  <Form.Check
-                    aria-label={`${p.name} present`}
-                    checked={present.includes(p.registration_id)}
-                    disabled={!editable}
-                    onChange={() => setTicked(toggle(present, p.registration_id))}
-                  />
-                </td>
-                <td>
-                  {p.name}
-                  <div className="small text-muted">{p.roll_no || 'Faculty'}</div>
-                </td>
-                <td className="small">
-                  {p.attended}/{p.total}
-                  {byAttendance && p.meets_criteria && (
-                    <span className="soft-badge tone-success ms-2">Meets {data.min_attendance_percent}%</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {visible.map((p) => {
+              const isOwn = p.registration_id === ownId;
+              return (
+                <tr key={p.registration_id}>
+                  <td>
+                    <Form.Check
+                      aria-label={`${p.name} present`}
+                      checked={present.includes(p.registration_id)}
+                      disabled={!editable || isOwn}
+                      onChange={() => setTicked(toggle(present, p.registration_id))}
+                    />
+                  </td>
+                  <td>
+                    {p.name}
+                    {isOwn && <span className="soft-badge tone-muted ms-2">You</span>}
+                    <div className="small text-muted">{p.roll_no || 'Faculty'}</div>
+                  </td>
+                  <td className="small">
+                    {p.attended}/{p.total}
+                    {byAttendance && p.meets_criteria && (
+                      <span className="soft-badge tone-success ms-2">Meets {data.min_attendance_percent}%</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </Table>
       </Card>

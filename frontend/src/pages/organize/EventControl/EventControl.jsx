@@ -4,12 +4,14 @@ import Loading from '../../../components/Loading';
 import StatusBadge from '../../../components/StatusBadge';
 import useLoad from '../../../utils/useLoad';
 import { formatRange, SCOPE_LABELS } from '../../../utils/format';
+import { PERMISSION_LABELS } from '../../../utils/constants';
 import OverviewTab from './OverviewTab';
 import SessionsTab from './SessionsTab';
 import RegistrationsTab from './RegistrationsTab';
 import AttendanceTab from './AttendanceTab';
 import CertificatesTab from './CertificatesTab';
 import FeedbackTab from './FeedbackTab';
+import DelegatesTab from './DelegatesTab';
 
 export default function EventControl() {
   const { id } = useParams();
@@ -28,11 +30,13 @@ export default function EventControl() {
     attendance: takesRegistrations && permissions.includes('attendance'),
     certificates: takesRegistrations && permissions.includes('certificates'),
     feedback: takesRegistrations && canManage,
+    delegates: canManage && event.kind === 'normal',
     sessions: canManage && event.kind === 'normal',
   };
   const firstAllowed = canManage ? 'overview' : ['registrations', 'attendance', 'certificates'].find((t) => show[t]) || 'overview';
   const activeTab = searchParams.get('tab') || firstAllowed;
   const editable = canManage && event.status !== 'cancelled' && event.lifecycle !== 'completed';
+  const isDelegate = !canManage && permissions.length > 0;
   const belongsTo =
     event.kind === 'umbrella'
       ? `Umbrella event · ${event.fest_name}`
@@ -63,6 +67,11 @@ export default function EventControl() {
       {location.state?.message && <Alert variant="success">{location.state.message}</Alert>}
       {error && <Alert variant="danger">{error}</Alert>}
       {permissions.length === 0 && <Alert variant="info">You can view this event but do not manage it.</Alert>}
+      {isDelegate && (
+        <Alert variant="info">
+          You're helping with this event: {permissions.map((p) => PERMISSION_LABELS[p]).join(', ')}.
+        </Alert>
+      )}
 
       <Tabs
         variant="underline"
@@ -92,6 +101,11 @@ export default function EventControl() {
         {show.feedback && (
           <Tab eventKey="feedback" title="Feedback">
             <FeedbackTab event={event} />
+          </Tab>
+        )}
+        {show.delegates && (
+          <Tab eventKey="delegates" title="Delegates">
+            <DelegatesTab event={event} />
           </Tab>
         )}
         {show.sessions && (

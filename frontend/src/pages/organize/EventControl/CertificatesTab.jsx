@@ -8,9 +8,20 @@ import useLoad from '../../../utils/useLoad';
 import { downloadFile } from '../../../utils/download';
 import { CERTIFICATE_TYPE_LABELS, formatDateTime } from '../../../utils/format';
 
+
+
+
+
+import { useAuth } from '../../../context/AuthContext';
+
 export default function CertificatesTab({ event }) {
   const url = `/events/${event.id}/certificates`;
   const { data, loading, error, reload } = useLoad(url);
+
+
+    const { user } = useAuth();
+
+
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
   const [actionError, setActionError] = useState('');
@@ -197,9 +208,11 @@ export default function CertificatesTab({ event }) {
                     required
                   >
                     <option value="">Choose participant…</option>
-                    {data.participants.map((p) => (
-                      <option key={p.user_id} value={p.user_id}>{p.name}</option>
-                    ))}
+                                       {data.participants
+                      .filter((p) => event.my.can_manage || p.user_id !== user.id)
+                      .map((p) => (
+                        <option key={p.user_id} value={p.user_id}>{p.name}</option>
+                      ))}
                   </Form.Select>
                 </Col>
                 <Col xs={5}>

@@ -28,3 +28,24 @@ export const PROGRAM_OPTIONS = [
 ];
 
 export const PROGRAM_MAX_YEAR = { UG: 4, DD: 5, PG: 2, PHD: 5 };
+
+
+
+
+
+
+//Group 8A
+
+
+export const PERMISSION_LABELS = {
+  registrations: 'Registrations',
+  attendance: 'Attendance',
+  announcements_files: 'Announcements & files',
+  certificates: 'Certificates',
+};
+
+export const DELEGATE_PRESETS = [
+  { label: 'Registration desk', permissions: ['registrations'] },
+  { label: 'Event-day volunteer', permissions: ['attendance'] },
+  { label: 'Full co-coordinator', permissions: ['registrations', 'attendance', 'announcements_files', 'certificates'] },
+];

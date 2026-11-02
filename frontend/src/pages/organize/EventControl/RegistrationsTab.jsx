@@ -6,10 +6,17 @@ import useLoad from '../../../utils/useLoad';
 import { STATUS_TONES } from '../../../utils/eventBadges';
 import { formatDateTime, REGISTRATION_LABELS } from '../../../utils/format';
 
+//for group 8
+
+import { useAuth } from '../../../context/AuthContext';
+
 const FILTERS = ['all', 'pending', 'approved', 'confirmed', 'rejected', 'cancelled'];
 
 export default function RegistrationsTab({ event, onChanged }) {
   const { data, loading, error, reload } = useLoad(`/events/${event.id}/registrations`);
+
+    const { user } = useAuth();
+  
   const [filter, setFilter] = useState(null); // null = choose automatically
   const [selected, setSelected] = useState([]); // registration ids
   const [busy, setBusy] = useState(false);
@@ -30,7 +37,8 @@ export default function RegistrationsTab({ event, onChanged }) {
 
   // What each ticked row can have done to it
   const isRejectable = (r) => r.status === 'pending' || (r.status === 'approved' && r.payment_status !== 'paid');
-  const isSelectable = (r) => isRejectable(r) || (canComplete && r.status === 'confirmed');
+         const isOwnRow = (r) => !event.my.can_manage && r.user_id === user.id; // delegates cannot act on themselves
+  const isSelectable = (r) => !isOwnRow(r) && (isRejectable(r) || (canComplete && r.status === 'confirmed'));
 
   const selectedRows = all.filter((r) => selected.includes(r.id));
   const toApprove = selectedRows.filter((r) => r.status === 'pending');
@@ -159,8 +167,9 @@ export default function RegistrationsTab({ event, onChanged }) {
                     <Form.Check aria-label={`Select ${r.name}`} checked={selected.includes(r.id)} onChange={() => toggleRow(r.id)} />
                   )}
                 </td>
-                <td>
+                                <td>
                   {r.name}
+                  {isOwnRow(r) && <span className="soft-badge tone-muted ms-2">You</span>}
                   <div className="small text-muted">{r.roll_no || 'Faculty'}</div>
                 </td>
                 <td className="small">{r.program ? `${r.program} · Y${r.year}` : '—'} {r.department_code && `· ${r.department_code}`}</td>
